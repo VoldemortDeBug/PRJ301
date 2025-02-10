@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Register</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <table>
+            <tr>
+                <td colspan="2" >Login information</td>
+            </tr>
+            <tr>
+                <td>EMAIL</td>
+                <td><input type="email" name ="mail" id="MAILinput"></td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td><input type="password" name ="pass" id="pass"></td>
+            </tr>
+            <tr>
+                <td>Confirm password</td>
+                <td><input type="password" name ="confirmpass" id="confirmPass"></td>
+            </tr>
+
+            <tr>
+                <td colspan="2" >User information</td>
+            </tr>
+            <tr>
+                <td>Full name</td>
+                <td><input type="text" name ="fullname" id="name"></td>
+            </tr>
+            <tr>
+                <td>Gender</td>
+                <td>
+                    <input type="radio" name="gender" id="gendermale" checked="checked"> male </br>
+                    <input type="radio" name="gender" id="genderfemale"> female </br>
+                </td>
+            </tr>
+            <tr>
+                <td>Mobile</td>
+                <td>
+                    <input type="tel" name ="mobile" id="mobile">
+                </td>
+            </tr>
+            <tr>
+                <td>Avatar</td>
+                <td>
+                    <input type="file" name ="avatar" id="avatar">
+                </td>
+            </tr>
+            <tr>
+                <td>Date of birth</td>
+                <td>
+                    <select name="birthday" id="birthday">
+                        <option value=""></option>
+                        <option value="1" selected="selected">1</option>
+                        <option value="2">2</option>
+                    </select>
+                    <select name="birthmonth" id="birthmonth">
+                        <option value=""></option>
+                        <option value="1" selected="selected">1</option>
+                        <option value="2">2</option>
+                    </select>
+                    <select name="birthyear" id="birthyear">
+                        <option value=""></option>
+                        <option value="2000" selected="selected">2000</option>
+                        <option value="2001">2001</option>
+                    </select>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2" >Address</td>
+            </tr>
+
+            <tr>
+                <td>Country</td>
+                <td>
+                    <select name="country" id="country">
+                        <option value=""></option>
+                        <option value="1" selected="selected">VIetnam</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>City</td>
+                <td>
+                    <select name="city" id="city">
+                        <option value=""></option>
+                        <option value="1" selected="selected">HCM</option>
+                        <option value="2">Hanoi</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Home address</td>
+                <td>
+                    <textarea name="homeAdress">
+                    </textarea>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="button" value="Register">
+                    <input type="button" value="Clear Form">
+                </td>
+            </tr>
+
+        </table>
+    </body>
+</html>
