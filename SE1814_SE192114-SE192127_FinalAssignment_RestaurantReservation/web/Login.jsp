@@ -14,7 +14,7 @@
     <body>
         <%@include file="header.jsp"  %>
         <div style="min-height: 800px">
-            <form action="MainController" method="post">
+            <form action="UserController" method="post">
                 <table>
                     <input type="hidden" name="action" value="login"/>
                     <tr>
@@ -33,6 +33,7 @@
             %>
             <div style="color: red"><%=ms.equals("null")?"": ms%></div>
             
+            <a href="Register.jsp"><input type="button" value="Register" /> </a>
             
         </div>
         <%@include file="footer.jsp"  %>

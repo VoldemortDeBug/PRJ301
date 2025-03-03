@@ -22,17 +22,17 @@ import util.DBUtils;
  * @author tungi
  */
 public class UserDAO implements IDAO<UserDTO, Integer> {
-    
-        private int newID() {
+
+    private int newID() {
         String sql = "  SELECT MAX(UserID)as MAXID FROM [Users]";
         try {
             Connection conn = DBUtils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
-            int res=-1;
+            int res = -1;
             rs.next();
-            if(rs.getInt("MAXID")>-1){
-                return rs.getInt("MAXID")+1;
+            if (rs.getInt("MAXID") > -1) {
+                return rs.getInt("MAXID") + 1;
             }
             return res;
         } catch (ClassNotFoundException ex) {
@@ -43,7 +43,6 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
             return -1;
         }
     }
-
 
     @Override
     public boolean create(UserDTO entity) {
@@ -100,6 +99,24 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
 
     @Override
     public boolean update(UserDTO entity) {
+        System.out.println("Updating for user...new data: "+entity);
+        String sql = " UPDATE [Users]  SET "
+                + "[Name] = ?, "
+                + "[Email] = ?,"
+                + "[Phone] = ?"
+                + "WHERE [UserID] = ? ";
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, entity.getName());
+            ps.setString(2, entity.getEmail());
+            ps.setString(3, entity.getPhone());
+            ps.setInt(4, entity.getUserID());
+            int res = ps.executeUpdate();
+            return res > 0;
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return false;
     }
 
@@ -152,6 +169,7 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 UserDTO user = new UserDTO(
+                        rs.getInt("UserID"),
                         rs.getString("Name"),
                         rs.getString("Username"),
                         rs.getString("Email"),

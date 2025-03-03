@@ -13,6 +13,7 @@ import java.sql.Date;
  */
 public class UserDTO {
 
+    private int userID;
     private String name;
     private String userName;
     private String email;
@@ -20,11 +21,30 @@ public class UserDTO {
     private String password;
     private int coins;
     private String profilepic;
+
+    public int getUserID() {
+        return userID;
+    }
+
+    public void setUserID(int userID) {
+        this.userID = userID;
+    }
     
     
     public UserDTO() {
     }
 
+    public UserDTO(int userID, String name, String userName, String email, String phone, String password, int coins, String profilepic) {
+        this.userID = userID;
+        this.name = name;
+        this.userName = userName;
+        this.email = email;
+        this.phone = phone;
+        this.password = password;
+        this.coins = coins;
+        this.profilepic = profilepic;
+    }
+    
     public UserDTO(String name, String userName, String email, String phone, String password, int coins, String profilepic) {
         this.name = name;
         this.userName = userName;

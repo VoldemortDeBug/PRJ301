@@ -12,7 +12,11 @@
         <title>JSP Page</title>
     </head>
     <body>
-        <form method="post" action="MainController" enctype="multipart/form-data">
+        
+        <%@include file="header.jsp" %>
+        
+        <h1>USER REGISTER</h1>
+        <form method="post" action="UserController" enctype="multipart/form-data">
             <input type="hidden" name="action" value="register"/>
             Username: <input type="text" name="txtUsername"/><br/>
             Password:  <input type="password" name="txtPassword"/><br/>
