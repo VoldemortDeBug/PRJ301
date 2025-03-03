@@ -5,12 +5,13 @@
  */
 package controller;
 
-import dao.BookDAO;
+import dao.ProjectDAO;
 import dao.UserDAO;
-import dto.BookDTO;
+import dto.ProjectDTO;
 import dto.UserDTO;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Date;
 import java.util.List;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -27,16 +28,17 @@ import javax.servlet.http.HttpServletResponse;
 public class MainController extends HttpServlet {
 
     private static final String LOGIN_PAGE = "Login.jsp";
+    private UserDAO udao = new UserDAO();
+    private ProjectDAO pdao = new ProjectDAO();
 
     public UserDTO getUser(String strUserID) {
-        UserDAO udao = new UserDAO();
-        UserDTO user = udao.searchByID(strUserID);
-        return user;
+        UserDTO newuser = udao.searchByID(strUserID);
+        return newuser;
     }
 
     public boolean isValidLogin(String usname, String passw) {
-        dao.UserDAO userDao = new UserDAO();
-        dto.UserDTO user = userDao.searchByID(usname);
+
+        dto.UserDTO user = udao.searchByID(usname);
         System.out.println(user);
         if (user == null) {
             return false;
@@ -59,36 +61,66 @@ public class MainController extends HttpServlet {
             //
             if (action != null && action.equals("login")) {
                 //login action
-                String username = request.getParameter("strUserID");
-                String password = request.getParameter("strPassword");
+                String username = (String) request.getParameter("strUserID");
+                String password = (String) request.getParameter("strPassword");
+                //System.out.println(isValidLogin(username, password) + " is working");
                 if (isValidLogin(username, password)) {
                     url = "search.jsp";
                     UserDTO user = getUser(username);
                     request.getSession().setAttribute("user", user);
+                    request.setAttribute("allProjects", pdao.readAll());
+                    System.out.println(user);
                 } else {
                     request.setAttribute("message", "Login failed. Incorrect Username or Password.");
                     url = LOGIN_PAGE;
                 }
+
+                System.out.println("no error till now");
             }
             if (action != null && action.equals("logout")) {
-                PrintWriter out = response.getWriter();
-                request.setAttribute("user", null);
-                out.println("<b>Logged out</b>");
-                out.println("<a href = 'MainController'>Return to login</a>");
-                url="MainController";
+                url = LOGIN_PAGE;
                 request.getSession().invalidate();
             }
-             if (action != null && action.equals("search")) {
+            if (action != null && action.equals("searchName")) {
                 url = "search.jsp";
-                BookDAO bdao = new BookDAO();
-                String searchTerm = request.getParameter("searchTerm");
-                List<BookDTO> books = bdao.searchByTitle(searchTerm);
-                request.setAttribute("books", books);
+                String searchInfo = request.getParameter("searchInfo");
+                request.setAttribute("searchInfo", searchInfo);
+                request.setAttribute("allProjects", pdao.readAll());
+                request.setAttribute("searchedProjects", pdao.searchByName(searchInfo));
             }
+            if (action != null && action.equals("updateProjectStatus")) {
+                url = "search.jsp";
+                int id = Integer.parseInt(request.getParameter("projectID"));
+                String newInfo = request.getParameter("newInfo");
+                if (pdao.updateStatus(id, newInfo)) {
+                    request.setAttribute("updatedOn", id);
+                }
+                request.setAttribute("allProjects", pdao.readAll());
+            }
+
+            if (action != null && action.equals("createProject")) {
+                url = "search.jsp";
+                request.setAttribute("allProjects", pdao.readAll());
+                String pname = (String) request.getParameter("txtPname");
+                String pdes = (String) request.getParameter("txtPdes");;
+                String pstat = (String) request.getParameter("txtPstat");;
+                Date estlaunch = null;
+                if (request.getParameter("txtPdate") != null && !request.getParameter("txtPdate").equals("")) {
+                    estlaunch = Date.valueOf(request.getParameter("txtPdate"));
+                }
+                ProjectDTO newp = new ProjectDTO(-1, pname, pdes, pstat, estlaunch);
+                System.out.println(newp);
+                if (pname.equals("") ||  pstat.equals("") || estlaunch == null) {
+                    request.setAttribute("projectError", newp);
+                } else {
+                    pdao.create(newp);
+                }
+            }
+
         } catch (Exception e) {
             log("Error at MainController: " + e.toString());
         } finally {
-            System.out.println(url);
+            System.out.println(url + " is final url");
             RequestDispatcher rd = request.getRequestDispatcher(url);
             if (!url.equals("MainController")) {
                 rd.forward(request, response);

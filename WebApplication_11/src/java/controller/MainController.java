@@ -75,15 +75,26 @@ public class MainController extends HttpServlet {
                 request.setAttribute("user", null);
                 out.println("<b>Logged out</b>");
                 out.println("<a href = 'MainController'>Return to login</a>");
-                url="MainController";
+                url = "MainController";
                 request.getSession().invalidate();
             }
-             if (action != null && action.equals("search")) {
+            if (action != null && action.equals("search")) {
                 url = "search.jsp";
                 BookDAO bdao = new BookDAO();
                 String searchTerm = request.getParameter("searchTerm");
                 List<BookDTO> books = bdao.searchByTitle(searchTerm);
                 request.setAttribute("books", books);
+                request.setAttribute("searchTerm", searchTerm);
+            }
+            if (action != null && action.equals("delete")) {
+                url = "search.jsp";
+                String searchTerm = request.getParameter("searchTerm");
+                String bookID = request.getParameter("bookID");
+                BookDAO bdao = new BookDAO();
+                bdao.delete(bookID);
+                List<BookDTO> books = bdao.searchByTitle(searchTerm);
+                request.setAttribute("books", books);
+                request.setAttribute("searchTerm", searchTerm);
             }
         } catch (Exception e) {
             log("Error at MainController: " + e.toString());

@@ -18,6 +18,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import util.AuthenUtils;
 
 /**
  *
@@ -26,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet(name = "MainController", urlPatterns = {"/MainController"})
 public class MainController extends HttpServlet {
 
+    private BookDAO bdao = new BookDAO();
     private static final String LOGIN_PAGE = "Login.jsp";
 
     public UserDTO getUser(String strUserID) {
@@ -47,6 +49,16 @@ public class MainController extends HttpServlet {
         return false;
     }
 
+    private void searchResponse(HttpServletRequest request, HttpServletResponse response) {
+        String searchTerm = (String) request.getParameter("searchTerm");
+        if (searchTerm == null) {
+            searchTerm = "";
+        }
+        List<BookDTO> books = bdao.searchByTitle(searchTerm);
+        request.setAttribute("books", books);
+        request.setAttribute("searchTerm", searchTerm);
+    }
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -65,6 +77,7 @@ public class MainController extends HttpServlet {
                     url = "search.jsp";
                     UserDTO user = getUser(username);
                     request.getSession().setAttribute("user", user);
+                    searchResponse(request, response);
                 } else {
                     request.setAttribute("message", "Login failed. Incorrect Username or Password.");
                     url = LOGIN_PAGE;
@@ -75,15 +88,74 @@ public class MainController extends HttpServlet {
                 request.setAttribute("user", null);
                 out.println("<b>Logged out</b>");
                 out.println("<a href = 'MainController'>Return to login</a>");
-                url="MainController";
+                url = "MainController";
                 request.getSession().invalidate();
             }
-             if (action != null && action.equals("search")) {
+            if (action != null && action.equals("search")) {
                 url = "search.jsp";
-                BookDAO bdao = new BookDAO();
-                String searchTerm = request.getParameter("searchTerm");
-                List<BookDTO> books = bdao.searchByTitle(searchTerm);
-                request.setAttribute("books", books);
+                searchResponse(request, response);
+            }
+            if (action != null && action.equals("delete") && AuthenUtils.isAdmin(request.getSession())) {
+                url = "search.jsp";
+                String bookID = request.getParameter("bookID");
+                bdao.delete(bookID);
+                searchResponse(request, response);
+            }
+            if (action != null && action.equals("add") && AuthenUtils.isAdmin(request.getSession())) {
+                url = "search.jsp";
+
+                boolean checkError = false;
+                String txtBookID = request.getParameter("txtBookID");
+                String txtTitle = request.getParameter("txtTitle");
+                String txtAuthor = request.getParameter("txtAuthor");
+
+                if (txtBookID == null || txtBookID.trim().isEmpty()) {
+                    checkError = true;
+                }
+                if (txtTitle == null || txtTitle.trim().isEmpty()) {
+                    checkError = true;
+                }
+                if (txtAuthor == null || txtAuthor.trim().isEmpty()) {
+                    checkError = true;
+                }
+                int pubYear = -1;
+                if (request.getParameter("txtPubYear") == null || request.getParameter("txtPubYear").equals("")) {
+                    checkError = true;
+                } else {
+                    pubYear = Integer.parseInt(request.getParameter("txtPubYear"));
+                }
+
+                double price = -1;
+                if (request.getParameter("txtPrice") == null || request.getParameter("txtPrice").equals("")) {
+                    checkError = true;
+                } else {
+                    price = Double.parseDouble(request.getParameter("txtPrice"));
+                }
+
+                int quantity = -1;
+                if (request.getParameter("txtQuantity") == null || request.getParameter("txtQuantity").equals("")) {
+                    checkError = true;
+                } else {
+                    quantity = Integer.parseInt(request.getParameter("txtQuantity"));
+                }
+
+                if (pubYear < 0 || price < 0 || quantity < 0) {
+                    checkError = true;
+                }
+
+                BookDTO newbook = new BookDTO(txtBookID, txtTitle, txtAuthor, pubYear, price, quantity);
+
+//                System.out.println(newbook);
+//                System.out.println(pubYear + " signal inside if 1 " + (txtBookID == null || txtBookID.trim().isEmpty()));
+//                System.out.println(checkError + " is check error and is is....hmmm");
+                if (checkError) {
+                    url = "bookForm.jsp";
+                    request.setAttribute("bookInfo", newbook);
+                } else {
+                    bdao.create(newbook);
+                    searchResponse(request, response);
+                }
+
             }
         } catch (Exception e) {
             log("Error at MainController: " + e.toString());

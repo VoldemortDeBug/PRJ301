@@ -5,38 +5,45 @@
  */
 package controller;
 
-import dao.BookDAO;
 import dao.UserDAO;
-import dto.BookDTO;
 import dto.UserDTO;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.sql.Date;
 import java.util.List;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 
 /**
  *
  * @author Admin
  */
 @WebServlet(name = "MainController", urlPatterns = {"/MainController"})
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
+        maxFileSize = 1024 * 1024 * 10, // 10 MB
+        maxRequestSize = 1024 * 1024 * 100 // 100 MB
+)
 public class MainController extends HttpServlet {
 
     private static final String LOGIN_PAGE = "Login.jsp";
+    private static final String USER_IMG_FOLDER = "D:\\FPTK19\\PRJ\\PRJ301\\SE1814_SE192114-SE192127_FinalAssignment_RestaurantReservation\\web\\users\\img\\";
+    private UserDAO udao = new UserDAO();
 
-    public UserDTO getUser(String strUserID) {
-        UserDAO udao = new UserDAO();
-        UserDTO user = udao.searchByID(strUserID);
-        return user;
+    public UserDTO getUser(String strUsername) {
+        UserDTO newuser = udao.searchByUsername(strUsername);
+        return newuser;
     }
 
     public boolean isValidLogin(String usname, String passw) {
-        dao.UserDAO userDao = new UserDAO();
-        dto.UserDTO user = userDao.searchByID(usname);
+        dto.UserDTO user = udao.searchByUsername(usname);
         System.out.println(user);
         if (user == null) {
             return false;
@@ -53,42 +60,82 @@ public class MainController extends HttpServlet {
         String url = LOGIN_PAGE;
         try {
             String action = request.getParameter("action");
+            System.out.println("action = " + action);
             if (action == null) {
                 url = LOGIN_PAGE;
             }
             //
             if (action != null && action.equals("login")) {
                 //login action
-                String username = request.getParameter("strUserID");
-                String password = request.getParameter("strPassword");
+                String username = (String) request.getParameter("strUserID");
+                String password = (String) request.getParameter("strPassword");
                 if (isValidLogin(username, password)) {
-                    url = "search.jsp";
+                    url = "Home.jsp";
                     UserDTO user = getUser(username);
+                    System.out.println(user+" logged in");
                     request.getSession().setAttribute("user", user);
+                    System.out.println(user);
                 } else {
                     request.setAttribute("message", "Login failed. Incorrect Username or Password.");
                     url = LOGIN_PAGE;
                 }
+
+                System.out.println("no error till now");
             }
             if (action != null && action.equals("logout")) {
-                PrintWriter out = response.getWriter();
-                request.setAttribute("user", null);
-                out.println("<b>Logged out</b>");
-                out.println("<a href = 'MainController'>Return to login</a>");
-                url="MainController";
+                url = LOGIN_PAGE;
                 request.getSession().invalidate();
             }
-             if (action != null && action.equals("search")) {
-                url = "search.jsp";
-                BookDAO bdao = new BookDAO();
-                String searchTerm = request.getParameter("searchTerm");
-                List<BookDTO> books = bdao.searchByTitle(searchTerm);
-                request.setAttribute("books", books);
+
+            if (action != null && action.equals("register")) {
+                System.out.println("registering in proccess...");
+                url = "Home.jsp";
+                String username = request.getParameter("txtUsername");
+                String password = request.getParameter("txtPassword");
+                String phone = request.getParameter("txtPhone");
+                String name = request.getParameter("txtName");
+                String email = request.getParameter("txtEmail");
+                String photoname = "default.jpg";
+
+                System.out.println(phone + " is the phone");
+                Part filePhoto = request.getPart("photo");
+                System.out.println(filePhoto);
+                if (filePhoto != null && filePhoto.getSize() > 0) {
+                    filePhoto.write(USER_IMG_FOLDER + username + ".jpg");
+                    photoname = username + ".jpg";
+                }
+                UserDTO user = new UserDTO(name, username, email, phone, password, 0, photoname);
+                System.out.println(user);
+                udao.create(user);
+                request.getSession().setAttribute("user", user);
             }
+             if (action != null && action.equals("updateProfile")) {
+                System.out.println("registering in proccess...");
+                url = "UserProfile.jsp";
+                String username = request.getParameter("txtUsername");
+                String password = request.getParameter("txtPassword");
+                String phone = request.getParameter("txtPhone");
+                String name = request.getParameter("txtName");
+                String email = request.getParameter("txtEmail");
+                String photoname = "default.jpg";
+
+                System.out.println(phone + " is the phone");
+                Part filePhoto = request.getPart("photo");
+                System.out.println(filePhoto);
+                if (filePhoto != null && filePhoto.getSize() > 0) {
+                    filePhoto.write(USER_IMG_FOLDER + username + ".jpg");
+                    photoname = username + ".jpg";
+                }
+                UserDTO user = new UserDTO(name, username, email, phone, password, 0, photoname);
+                System.out.println(user);
+                udao.create(user);
+                request.getSession().setAttribute("user", user);
+            }
+
         } catch (Exception e) {
             log("Error at MainController: " + e.toString());
         } finally {
-            System.out.println(url);
+            System.out.println(url + " is final url");
             RequestDispatcher rd = request.getRequestDispatcher(url);
             if (!url.equals("MainController")) {
                 rd.forward(request, response);
