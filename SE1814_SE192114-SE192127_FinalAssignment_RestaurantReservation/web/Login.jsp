@@ -13,6 +13,7 @@
     </head>
     <body>
         <%@include file="header.jsp"  %>
+        <h1>USER LOGIN</h1>
         <div style="min-height: 800px">
             <form action="UserController" method="post">
                 <table>
@@ -28,14 +29,16 @@
                 </table>
                 <input type="submit" value="Login"/>
             </form>
-            <%
-                String ms = request.getAttribute("message")+"";
+            <%                
+                String ms = request.getAttribute("message") + "";
+                if (ms.equals("null")) {
+                    ms = "";
+                }
             %>
-            <div style="color: red"><%=ms.equals("null")?"": ms%></div>
-            
+            <div style="color: red"><%= ms%></div>
+
             <a href="Register.jsp"><input type="button" value="Register" /> </a>
-            
-        </div>
-        <%@include file="footer.jsp"  %>
+
+            <%@include file="footer.jsp"  %>
     </body>
 </html>

@@ -19,6 +19,7 @@
             if (request.getSession().getAttribute("user") != null) {
                 user = (UserDTO) request.getSession().getAttribute("user");
             }
+            
         %>
         
         <h1>This is header!</h1>

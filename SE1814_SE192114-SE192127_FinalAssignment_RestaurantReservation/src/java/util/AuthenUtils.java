@@ -18,12 +18,13 @@ public class AuthenUtils {
 
     
 
-    public static boolean isUserLogged(HttpSession session){
+    public static boolean isUserLoggedIn(HttpSession session){
         return session.getAttribute("user")!=null;
     }
-
-    public static boolean isOwnerLogged(HttpSession session){
+    
+    public static boolean isOwnerLoggedIn(HttpSession session){
         return session.getAttribute("owner")!=null;
     }
+    
     
 }

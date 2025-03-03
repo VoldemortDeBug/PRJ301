@@ -12,9 +12,9 @@
         <title>JSP Page</title>
     </head>
     <body>
-        
+
         <%@include file="header.jsp" %>
-        
+
         <h1>USER REGISTER</h1>
         <form method="post" action="UserController" enctype="multipart/form-data">
             <input type="hidden" name="action" value="register"/>
@@ -23,9 +23,10 @@
             Name:  <input type="text" name="txtName"/><br/>
             Email: <input type="email" name="txtEmail"/><br/>
             Phone:    <input type="tel" name="txtPhone" id="phone" name="phone" placeholder="0123456789" pattern="[0-9]{3}[0-9]{7}" required><br/>
-            
+
             Profile Photo: <input type="file" name="photo" size="50" /><br/>
             <input type="submit" value="Save">
         </form>
+
     </body>
 </html>

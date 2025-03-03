@@ -71,11 +71,15 @@ public class UserController extends HttpServlet {
         }
         return url;
     }
+    
+    private void setOrigin(HttpServletRequest request){
+        request.setAttribute("origin", "UserController");
+    }
 
     private String processUpdateProfile(HttpServletRequest request, HttpServletResponse response) {
         String url = "UserProfile.jsp";
-        System.out.println(AuthenUtils.isUserLogged(request.getSession()) + " is user logged in...");
-        if (!AuthenUtils.isUserLogged(request.getSession())) {
+        System.out.println(AuthenUtils.isUserLoggedIn(request.getSession()) + " is user logged in...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
             System.out.println("go home bruh");
             return "Home.jsp";
         }
@@ -146,6 +150,7 @@ public class UserController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String url = LOGIN_PAGE;
+        System.out.println("RESPONDING FROM USERCONTROLLER");
         try {
             String action = request.getParameter("action");
             System.out.println("action = " + action);
@@ -155,6 +160,7 @@ public class UserController extends HttpServlet {
             //
             if (action != null && action.equals("login")) {
                 url = processLogin(request, response);
+                setOrigin(request);
             }
             if (action != null && action.equals("logout")) {
                 url = LOGIN_PAGE;
