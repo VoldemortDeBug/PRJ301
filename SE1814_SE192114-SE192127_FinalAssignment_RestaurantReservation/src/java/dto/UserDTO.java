@@ -44,16 +44,6 @@ public class UserDTO {
         this.profilepic = profilepic;
     }
 
-    public UserDTO(String name, String userName, String email, String phone, String password, int coins, String profilepic) {
-        this.name = name;
-        this.userName = userName;
-        this.email = email;
-        this.phone = phone;
-        this.password = password;
-        this.coins = coins;
-        this.profilepic = profilepic;
-    }
-
     public String getName() {
         return name;
     }

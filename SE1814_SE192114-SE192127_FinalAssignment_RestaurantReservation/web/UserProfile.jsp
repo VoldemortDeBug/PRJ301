@@ -39,6 +39,47 @@
             <span style="color: green"><%= message%></span>
         </form>
 
+
+        <h1>Add new restaurant</h1>
+
+        <%
+        
+            String rnameE ="";
+            String rname = request.getAttribute("rname")+"";
+            if(rname.equals("")){
+                rnameE="(*)";
+                rname="";
+            }
+             if(rname.equals("null")){
+                rname="";
+            }
+            
+            String rlocE ="";
+            String rloc = request.getAttribute("rloc")+"";
+            if(rloc.equals("")){
+                rlocE="(*)";
+                rloc="";
+            }
+             if(rloc.equals("null")){
+                rloc="";
+            }
+            
+        %>
+
+        <form method="post" action="UserController" enctype="multipart/form-data">
+            <input type="hidden" name="action" value="createRest"/>
+            Name: <span style="color: red"><%= rnameE %></span>  <input type="text" name="rname" value="<%= rname %>"  /><br/>
+            Location: <span style="color: red"><%= rlocE %></span> <input type="text" name="rloc" value="<%= rloc %>"  /> <br/>
+            <input type="submit" value="Save">
+            <%
+                String rmessage = "";
+                if (request.getAttribute("createResMes") != null) {
+                    message = (String) request.getAttribute("createResMes");
+                }
+            %>
+            <span style="color: green"><%= rmessage%></span>
+        </form>
+
         <a href="Home.jsp">BACK HOME</a>
     </body>
 </html>

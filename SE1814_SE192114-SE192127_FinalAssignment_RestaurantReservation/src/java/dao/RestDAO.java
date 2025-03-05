@@ -111,7 +111,7 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
     }
 
     public List<RestDTO> searchOwnedBy(Integer ownerID) {
-        String sql = "SELECT * FROM [Restaurants] WHERE [RestaurantID] = ? ";
+        String sql = "SELECT * FROM [Restaurants] WHERE [OwnerID] = ? ";
         List<RestDTO> lrest = new ArrayList<>();
         try {
             Connection conn = DBUtils.getConnection();

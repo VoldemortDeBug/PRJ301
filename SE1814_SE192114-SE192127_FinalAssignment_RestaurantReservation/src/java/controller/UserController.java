@@ -12,6 +12,7 @@ import dto.UserDTO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -80,7 +81,6 @@ public class UserController extends HttpServlet {
         String url = "UserProfile.jsp";
         System.out.println(AuthenUtils.isUserLoggedIn(request.getSession()) + " is user logged in...");
         if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
-            System.out.println("go home bruh");
             return "Home.jsp";
         }
         System.out.println("ur not going home");
@@ -125,11 +125,42 @@ public class UserController extends HttpServlet {
         String url = "Home.jsp";
         System.out.println("registering in proccess...");
 
+        int newID = udao.newID();
         String username = request.getParameter("txtUsername");
         String password = request.getParameter("txtPassword");
         String phone = request.getParameter("txtPhone");
         String name = request.getParameter("txtName");
         String email = request.getParameter("txtEmail");
+        boolean checkError = false;
+        if (!Utils.validString(username)) {
+            checkError = true;
+        } else {
+            request.setAttribute("username", username);
+        }
+        if (!Utils.validString(password)) {
+            checkError = true;
+        } else {
+            request.setAttribute("password", password);
+        }
+        if (!Utils.validString(phone)) {
+            checkError = true;
+        } else {
+            request.setAttribute("phone", phone);
+        }
+        if (!Utils.validString(name)) {
+            checkError = true;
+        } else {
+            request.setAttribute("name", name);
+        }
+        if (!Utils.validString(email)) {
+            checkError = true;
+        } else {
+            request.setAttribute("email", email);
+        }
+        if (checkError) {
+            return "Register.jsp";
+        }
+
         String photoname = "default.jpg";
         try {
             Part filePhoto = request.getPart("photo");
@@ -142,7 +173,7 @@ public class UserController extends HttpServlet {
             e.printStackTrace();
         }
 
-        UserDTO user = new UserDTO(name, username, email, phone, password, 0, photoname);
+        UserDTO user = new UserDTO(newID, name, username, email, phone, password, 0, photoname);
         System.out.println(user);
         udao.create(user);
         request.getSession().setAttribute("user", user);
@@ -158,7 +189,43 @@ public class UserController extends HttpServlet {
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
 
         try {
-            Utils.sendRestaurantList(request, rdao, user);
+            List<RestDTO> rlist = rdao.searchOwnedBy(user.getUserID());
+            System.out.println("worked till now"+ rlist);
+            request.setAttribute("rlist", rlist);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return url;
+    }
+
+    private String processCreateRest(HttpServletRequest request, HttpServletResponse response) {
+        String url = "UserProfile.jsp";
+        System.out.println("creating restaurant list in proccess...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+        String rname = request.getParameter("rname");
+        String rloc = request.getParameter("rloc");
+        boolean checkError = false;
+
+        if (!Utils.validString(rname)) {
+            checkError = true;
+        }
+        if (!Utils.validString(rloc)) {
+            checkError = true;
+        }
+
+        if (checkError) {
+            request.setAttribute("rloc", rloc);
+            request.setAttribute("rname", rname);
+            return url = "UserProfile.jsp";
+        }
+
+        RestDTO rest = new RestDTO(0, rname, rloc, user.getUserID());
+
+        try {
+            rdao.create(rest);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -191,6 +258,9 @@ public class UserController extends HttpServlet {
             }
             if (action != null && action.equals("restList.jsp")) {
                 url = processRestList(request, response);
+            }
+            if (action != null && action.equals("createRest")) {
+                url = processCreateRest(request, response);
             }
 
         } catch (Exception e) {

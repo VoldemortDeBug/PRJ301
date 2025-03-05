@@ -23,7 +23,7 @@ import util.DBUtils;
  */
 public class UserDAO implements IDAO<UserDTO, Integer> {
 
-    private int newID() {
+    public int newID() {
         String sql = "  SELECT MAX(UserID)as MAXID FROM [Users]";
         try {
             Connection conn = DBUtils.getConnection();
@@ -52,7 +52,7 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
         try {
             Connection conn = DBUtils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, newID());
+            ps.setInt(1, entity.getUserID());
             ps.setString(2, entity.getName());
             ps.setString(3, entity.getUserName());
             ps.setString(4, entity.getEmail());
@@ -81,6 +81,7 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
             ResultSet rs = st.executeQuery(sql);
             while (rs.next()) {
                 UserDTO user = new UserDTO(
+                        rs.getInt("UserID"),
                         rs.getString("Name"),
                         rs.getString("Username"),
                         rs.getString("Email"),

@@ -25,25 +25,5 @@ public class Utils {
         return (!s.equals("") && s.trim().length() > 0);
     }
 
-    public static String saveNewPhoto(HttpServletRequest request, String photoname) {
-        try {
-            Part filePhoto = request.getPart("photo");
-//            System.out.println("worked till now" + filePhoto);
-            if (filePhoto != null && filePhoto.getSize() > 0) {
-                filePhoto.write(USER_IMG_FOLDER + photoname);
-            }
-            System.out.println(photoname+" is the new profile pic");
-            return photoname;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println("default.jpg is the new profile pic");
-        return "default.jpg";
-    }
-
-    public static void sendRestaurantList(HttpServletRequest request, RestDAO rdao, UserDTO user) {
-        List<RestDTO> rlist = rdao.searchOwnedBy(user.getUserID());
-        request.setAttribute("rlist", rlist);
-    }
 
 }

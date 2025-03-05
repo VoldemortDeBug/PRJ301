@@ -13,19 +13,19 @@
         <title>JSP Page</title>
     </head>
     <body>
+
+        <%@include file="header.jsp" %>
+
         <h1>Hello!</h1>
-        <%
-            UserDTO user = new UserDTO();
-            if (request.getSession().getAttribute("user") != null) {
-                user = (UserDTO) request.getSession().getAttribute("user");
-            }
-        %>
         <h1>welcome <%= user.getName()%></h1>
         <a href="UserProfile.jsp"><img src="users/img/<%= user.getProfilepic()%>"  style="width: 40px; height: 40px; border-radius: 50%"/></a>
-
+        
+        <br/>
+        
+        
         <form action="UserController">
-            <input type="hidden" name="action" value="logout"/>
-            <input type="submit" value="Logout"/>
+            <input type="hidden" name="action" value="restList.jsp"/>
+            <input type="submit" value="Restaurants"/>
         </form>
 
 
