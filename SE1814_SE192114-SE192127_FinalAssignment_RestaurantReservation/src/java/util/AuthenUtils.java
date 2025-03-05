@@ -22,9 +22,4 @@ public class AuthenUtils {
         return session.getAttribute("user")!=null;
     }
     
-    public static boolean isOwnerLoggedIn(HttpSession session){
-        return session.getAttribute("owner")!=null;
-    }
-    
-    
 }

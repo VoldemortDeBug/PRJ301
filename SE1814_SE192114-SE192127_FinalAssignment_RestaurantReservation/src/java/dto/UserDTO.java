@@ -29,8 +29,7 @@ public class UserDTO {
     public void setUserID(int userID) {
         this.userID = userID;
     }
-    
-    
+
     public UserDTO() {
     }
 
@@ -44,7 +43,7 @@ public class UserDTO {
         this.coins = coins;
         this.profilepic = profilepic;
     }
-    
+
     public UserDTO(String name, String userName, String email, String phone, String password, int coins, String profilepic) {
         this.name = name;
         this.userName = userName;
@@ -113,8 +112,7 @@ public class UserDTO {
 
     @Override
     public String toString() {
-        return "UserDTO{" + "name=" + name + ", userName=" + userName + ", email=" + email + ", phone=" + phone + ", password=" + password + ", coins=" + coins + ", profilepic=" + profilepic + '}';
+        return "UserDTO{" + "userID=" + userID + ", name=" + name + ", userName=" + userName + ", email=" + email + ", phone=" + phone + ", password=" + password + ", coins=" + coins + ", profilepic=" + profilepic + '}';
     }
-    
 
 }

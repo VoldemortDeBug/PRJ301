@@ -5,10 +5,13 @@
  */
 package controller;
 
+import dao.RestDAO;
 import dao.UserDAO;
+import dto.RestDTO;
 import dto.UserDTO;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -36,6 +39,7 @@ public class UserController extends HttpServlet {
     private static final String LOGIN_PAGE = "Login.jsp";
     private static final String USER_IMG_FOLDER = "D:\\FPTK19\\PRJ\\PRJ301\\SE1814_SE192114-SE192127_FinalAssignment_RestaurantReservation\\web\\users\\img\\";
     private UserDAO udao = new UserDAO();
+    private RestDAO rdao = new RestDAO();
 
     public UserDTO getUser(String strUsername) {
         UserDTO newuser = udao.searchByUsername(strUsername);
@@ -71,10 +75,6 @@ public class UserController extends HttpServlet {
         }
         return url;
     }
-    
-    private void setOrigin(HttpServletRequest request){
-        request.setAttribute("origin", "UserController");
-    }
 
     private String processUpdateProfile(HttpServletRequest request, HttpServletResponse response) {
         String url = "UserProfile.jsp";
@@ -90,8 +90,8 @@ public class UserController extends HttpServlet {
         String name = request.getParameter("txtName");
         String email = request.getParameter("txtEmail");
 
-        System.out.println("User old data: "+user);
-        
+        System.out.println("User old data: " + user);
+
         if (Utils.validString(phone)) {
             user.setPhone(phone);
         }
@@ -108,14 +108,15 @@ public class UserController extends HttpServlet {
             Part filePhoto = request.getPart("photo");
             System.out.println("worked till now" + filePhoto);
             if (filePhoto != null && filePhoto.getSize() > 0) {
-                filePhoto.write(USER_IMG_FOLDER + user.getProfilepic());
+                filePhoto.write(USER_IMG_FOLDER + user.getUserName() + ".jpg");
+                user.setProfilepic(user.getUserName() + ".jpg");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         udao.update(user);
-        
+
         request.setAttribute("updateProfilePicMessage", "succeed");
         return url;
     }
@@ -132,6 +133,7 @@ public class UserController extends HttpServlet {
         String photoname = "default.jpg";
         try {
             Part filePhoto = request.getPart("photo");
+            System.out.println("worked till now" + filePhoto);
             if (filePhoto != null && filePhoto.getSize() > 0) {
                 filePhoto.write(USER_IMG_FOLDER + username + ".jpg");
                 photoname = username + ".jpg";
@@ -139,10 +141,27 @@ public class UserController extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         UserDTO user = new UserDTO(name, username, email, phone, password, 0, photoname);
         System.out.println(user);
         udao.create(user);
         request.getSession().setAttribute("user", user);
+        return url;
+    }
+
+    private String processRestList(HttpServletRequest request, HttpServletResponse response) {
+        String url = "RestList.jsp";
+        System.out.println("getting restaurant list in proccess...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+
+        try {
+            Utils.sendRestaurantList(request, rdao, user);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return url;
     }
 
@@ -157,10 +176,8 @@ public class UserController extends HttpServlet {
             if (action == null) {
                 url = LOGIN_PAGE;
             }
-            //
             if (action != null && action.equals("login")) {
                 url = processLogin(request, response);
-                setOrigin(request);
             }
             if (action != null && action.equals("logout")) {
                 url = LOGIN_PAGE;
@@ -171,6 +188,9 @@ public class UserController extends HttpServlet {
             }
             if (action != null && action.equals("updateProfile")) {
                 url = processUpdateProfile(request, response);
+            }
+            if (action != null && action.equals("restList.jsp")) {
+                url = processRestList(request, response);
             }
 
         } catch (Exception e) {

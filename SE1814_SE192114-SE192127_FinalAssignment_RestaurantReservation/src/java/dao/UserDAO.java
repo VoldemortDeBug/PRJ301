@@ -48,7 +48,6 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
     public boolean create(UserDTO entity) {
         String sql = "INSERT INTO [Users] ([UserID], [Name], [Username], [Email], [Phone], [Password], [Coins], [Profile_Picture])"
                 + " VALUES (?, ?, ?, ?, ?, ?, ?, ? )";
-        ;
 
         try {
             Connection conn = DBUtils.getConnection();
@@ -100,18 +99,15 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
     @Override
     public boolean update(UserDTO entity) {
         System.out.println("Updating for user...new data: "+entity);
-        String sql = " UPDATE [Users]  SET "
-                + "[Name] = ?, "
-                + "[Email] = ?,"
-                + "[Phone] = ?"
-                + "WHERE [UserID] = ? ";
+        String sql = "   UPDATE [Users]  SET [Name] = ?, [Email] =?, [Phone] =? ,[Profile_Picture]=? WHERE [UserID] = ?;";
         try {
             Connection conn = DBUtils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, entity.getName());
             ps.setString(2, entity.getEmail());
             ps.setString(3, entity.getPhone());
-            ps.setInt(4, entity.getUserID());
+            ps.setString(4, entity.getProfilepic());
+            ps.setInt(5, entity.getUserID());
             int res = ps.executeUpdate();
             return res > 0;
         } catch (ClassNotFoundException | SQLException ex) {
@@ -122,31 +118,6 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
 
     @Override
     public List<UserDTO> search(String searchTerm) {
-//        List<UserDTO> list = new ArrayList<>();
-//        String sql = "SELECT [userID], [fullName], [roleID], [password] FROM [tblUsers] "
-//                + "WHERE [userID] LIKE ? "
-//                + "OR [fullName] LIKE ? "
-//                + "OR [roleID] LIKE ? ";
-//        try {
-//            Connection conn = DBUtils.getConnection();
-//            PreparedStatement ps = conn.prepareStatement(sql);
-//            ps.setString(1, searchTerm);
-//            ps.setString(2, searchTerm);
-//            ps.setString(3, searchTerm);
-//            ResultSet rs = ps.executeQuery();
-//            while (rs.next()) {
-//                UserDTO user = new UserDTO(
-//                        rs.getString("userID"),
-//                        rs.getString("fullName"),
-//                        rs.getString("roleID"),
-//                        rs.getString("password")
-//                );
-//                list.add(user);
-//            }
-//        } catch (ClassNotFoundException | SQLException ex) {
-//            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        return list;
         return null;
     }
 
