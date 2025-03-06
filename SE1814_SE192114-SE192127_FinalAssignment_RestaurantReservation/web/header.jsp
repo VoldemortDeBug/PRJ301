@@ -23,7 +23,14 @@
 
         %>
 
-        <h1>This is header!</h1>
+        <h1>
+            This is header!        
+            <%
+                if(request.getSession().getAttribute("user")!=null)
+                {%>
+            <a href="UserProfile.jsp"><img src="users/img/<%= user.getProfilepic()%>"  style="width: 40px; height: 40px; border-radius: 50%"/></a>
+            <%}%>
+        </h1>
         
         <form action="UserController">
             <input type="hidden" name="action" value="logout"/>

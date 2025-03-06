@@ -5,15 +5,19 @@
  */
 package dto;
 
+import java.util.List;
+
 /**
  *
  * @author Admin
  */
 public class RestDTO {
+
     private int restID;
     private String name;
     private String loc;
     private int OwnerID;
+    private List<PhotoDTO> lphoto;
 
     public RestDTO(int resID, String name, String loc, int OwnerID) {
         this.restID = resID;
@@ -56,5 +60,21 @@ public class RestDTO {
     public void setOwnerID(int OwnerID) {
         this.OwnerID = OwnerID;
     }
-    
+
+    public int getRestID() {
+        return restID;
+    }
+
+    public List<PhotoDTO> getLphoto() {
+        return lphoto;
+    }
+
+    public void setRestID(int restID) {
+        this.restID = restID;
+    }
+
+    public void setLphoto(List<PhotoDTO> lphoto) {
+        this.lphoto = lphoto;
+    }
+
 }

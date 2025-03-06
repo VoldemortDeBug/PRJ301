@@ -107,10 +107,15 @@ public class MainController extends HttpServlet {
                 Date estlaunch = null;
                 if (request.getParameter("txtPdate") != null && !request.getParameter("txtPdate").equals("")) {
                     estlaunch = Date.valueOf(request.getParameter("txtPdate"));
+                    Date currentSqlDate = new Date(System.currentTimeMillis());
+                    if (currentSqlDate.after(estlaunch)) {
+                        estlaunch=null;
+                    }
+
                 }
                 ProjectDTO newp = new ProjectDTO(-1, pname, pdes, pstat, estlaunch);
                 System.out.println(newp);
-                if (pname.equals("") ||  pstat.equals("") || estlaunch == null) {
+                if (pname.equals("") || pstat.equals("") || estlaunch == null) {
                     request.setAttribute("projectError", newp);
                 } else {
                     pdao.create(newp);

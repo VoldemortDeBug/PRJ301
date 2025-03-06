@@ -19,9 +19,8 @@
 
         <%            if (request.getAttribute("rlist") != null) {
                 List<RestDTO> rlist = (List<RestDTO>) request.getAttribute("rlist");
-            
-            if (rlist.size()>0)
-            {
+
+                if (rlist.size() > 0) {
         %>
 
         <h1>Restaurant owned by <%= user.getName()%></h1>
@@ -38,11 +37,19 @@
             <tr>
                 <td><%= i.getName()%></td>
                 <td><%= i.getLoc()%></td>
+                <td>
+                    <form action="UserController" method="post">
+                        <input type="hidden" name="action" value="restProfile"/>
+                        <input type="hidden" name="restID" value="<%= i.getResID() %>"/>
+                        <input type="submit"  value="Details"/> 
+                    </form>
+                </td>
             </tr>
             <%}%>
         </table>
-        <%}}%>
-        
+        <%}
+            }%>
+
         <a href="Home.jsp"><input type="button" value="Home" /></a>
 
         <%@include file="footer.jsp"  %>

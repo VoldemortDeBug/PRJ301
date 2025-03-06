@@ -5,7 +5,9 @@
  */
 package dao;
 
+import dto.PhotoDTO;
 import dto.RestDTO;
+import dto.UserDTO;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -22,7 +24,7 @@ import util.DBUtils;
  */
 public class RestDAO implements IDAO<RestDTO, Integer> {
 
-    private int newID() {
+    public int newID() {
         String sql = "  SELECT MAX(RestaurantID)as MAXID FROM [Restaurants]";
         try {
             Connection conn = DBUtils.getConnection();
@@ -35,10 +37,10 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
             }
             return res;
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
             return -1;
         } catch (SQLException ex) {
-            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
             return -1;
         }
     }
@@ -52,7 +54,7 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
         try {
             Connection conn = DBUtils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, newID());
+            ps.setInt(1, entity.getResID());
             ps.setString(2, entity.getName());
             ps.setString(3, entity.getLoc());
             ps.setInt(4, entity.getOwnerID());;
@@ -132,5 +134,24 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
         }
         return lrest;
     }
+    
+    public RestDTO restOwnedBy(int restID,int userID){
+        String sql="SELECT * FROM [Restaurants] WHERE [OwnerID]=? AND [RestaurantID]=?";
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, userID);
+            ps.setInt(2, restID);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                RestDTO rest=new RestDTO(restID, rs.getString("Name"), rs.getString("Location"), userID);
+                return rest;
+            }
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
 
 }

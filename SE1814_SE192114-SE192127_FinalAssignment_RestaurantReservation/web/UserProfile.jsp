@@ -72,14 +72,19 @@
             Location: <span style="color: red"><%= rlocE %></span> <input type="text" name="rloc" value="<%= rloc %>"  /> <br/>
             <input type="submit" value="Save">
             <%
-                String rmessage = "";
-                if (request.getAttribute("createResMes") != null) {
-                    message = (String) request.getAttribute("createResMes");
+                String rMessage = request.getAttribute("createRestMes")+"";
+                if (rMessage.equals("null")) {
+                    rMessage="";
                 }
             %>
-            <span style="color: green"><%= rmessage%></span>
+            <span style="color: green"><%= rMessage %></span>
         </form>
 
-        <a href="Home.jsp">BACK HOME</a>
+        
+        <a href="Home.jsp"><input type="button" value="Home" /></a>
+        
+        
+        
+            <%@include file="footer.jsp"  %>
     </body>
 </html>

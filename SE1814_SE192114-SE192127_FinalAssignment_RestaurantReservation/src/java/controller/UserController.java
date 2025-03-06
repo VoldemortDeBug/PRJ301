@@ -6,7 +6,9 @@
 package controller;
 
 import dao.RestDAO;
+import dao.RestPhotoDAO;
 import dao.UserDAO;
+import dto.PhotoDTO;
 import dto.RestDTO;
 import dto.UserDTO;
 import java.io.IOException;
@@ -39,8 +41,10 @@ public class UserController extends HttpServlet {
 
     private static final String LOGIN_PAGE = "Login.jsp";
     private static final String USER_IMG_FOLDER = "D:\\FPTK19\\PRJ\\PRJ301\\SE1814_SE192114-SE192127_FinalAssignment_RestaurantReservation\\web\\users\\img\\";
+    private static final String REST_IMG_FOLDER = "D:\\FPTK19\\PRJ\\PRJ301\\SE1814_SE192114-SE192127_FinalAssignment_RestaurantReservation\\web\\users\\rimg\\";
     private UserDAO udao = new UserDAO();
     private RestDAO rdao = new RestDAO();
+    private RestPhotoDAO rpdao = new RestPhotoDAO();
 
     public UserDTO getUser(String strUsername) {
         UserDTO newuser = udao.searchByUsername(strUsername);
@@ -190,7 +194,6 @@ public class UserController extends HttpServlet {
 
         try {
             List<RestDTO> rlist = rdao.searchOwnedBy(user.getUserID());
-            System.out.println("worked till now"+ rlist);
             request.setAttribute("rlist", rlist);
         } catch (Exception e) {
             e.printStackTrace();
@@ -222,10 +225,87 @@ public class UserController extends HttpServlet {
             return url = "UserProfile.jsp";
         }
 
-        RestDTO rest = new RestDTO(0, rname, rloc, user.getUserID());
+        RestDTO rest = new RestDTO(rdao.newID(), rname, rloc, user.getUserID());
 
         try {
             rdao.create(rest);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        request.setAttribute("createRestMes", "suceed");
+        System.out.println("created rest successfully");
+        return url;
+    }
+
+    private String processRestProfile(HttpServletRequest request, HttpServletResponse response) {
+        String url = "RestaurantProfile.jsp";
+        System.out.println("getting restaurant photo list...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+        int restID = Integer.parseInt(request.getParameter("restID"));
+
+        try {
+            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
+            List<PhotoDTO> lphoto = (List<PhotoDTO>) rpdao.getAllPhoto(restID);
+            request.setAttribute("lphoto", lphoto);
+            request.setAttribute("rest", rest);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return url;
+    }
+
+    private String processAddRestPhoto(HttpServletRequest request, HttpServletResponse response) {
+        String url = "RestaurantProfile.jsp";
+        System.out.println("adding restaurant photo ...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+        int restID = Integer.parseInt(request.getParameter("restID"));
+
+        try {
+            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
+            try {
+                PhotoDTO rphoto = new PhotoDTO(rpdao.newID(), restID, "");
+                Part filePhoto = request.getPart("rphoto");
+                System.out.println("worked till now" + filePhoto);
+                if (filePhoto != null && filePhoto.getSize() > 0) {
+                    filePhoto.write(REST_IMG_FOLDER + rphoto.getPhotoID() + user.getUserName() + restID+user.getEmail() + ".jpg");
+                    rphoto.setPhoto(rphoto.getPhotoID() + user.getUserName() + restID+user.getEmail() +".jpg");
+                    rpdao.create(rphoto);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            List<PhotoDTO> lphoto = (List<PhotoDTO>) rpdao.getAllPhoto(restID);
+            request.setAttribute("lphoto", lphoto);
+            request.setAttribute("rest", rest);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return url;
+    }
+    private String processDelRestPhoto(HttpServletRequest request, HttpServletResponse response) {
+        String url = "RestaurantProfile.jsp";
+        System.out.println("adding restaurant photo ...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+        int restID = Integer.parseInt(request.getParameter("restID"));
+        int photoID = Integer.parseInt(request.getParameter("photoID"));
+
+        try {
+            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
+            rpdao.delete(photoID);
+            List<PhotoDTO> lphoto = (List<PhotoDTO>) rpdao.getAllPhoto(restID);
+            request.setAttribute("lphoto", lphoto);
+            request.setAttribute("rest", rest);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -261,6 +341,15 @@ public class UserController extends HttpServlet {
             }
             if (action != null && action.equals("createRest")) {
                 url = processCreateRest(request, response);
+            }
+            if (action != null && action.equals("restProfile")) {
+                url = processRestProfile(request, response);
+            }
+            if (action != null && action.equals("addRestPic")) {
+                url = processAddRestPhoto(request, response);
+            }
+            if (action != null && action.equals("deleteResPhoto")) {
+                url = processDelRestPhoto(request, response);
             }
 
         } catch (Exception e) {
