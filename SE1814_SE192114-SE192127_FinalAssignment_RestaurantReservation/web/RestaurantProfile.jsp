@@ -4,6 +4,8 @@
     Author     : Admin
 --%>
 
+<%@page import="util.Utils"%>
+<%@page import="dto.REntityDTO"%>
 <%@page import="dto.PhotoDTO"%>
 <%@page import="java.util.List"%>
 <%@page import="dto.RestDTO"%>
@@ -70,6 +72,8 @@
         <h1>Restaurant: <%= rest.getName()%></h1>
         <h1>Location: <%= rest.getLoc()%></h1>
 
+        <h1>Photos:</h1>
+
         <%if (request.getAttribute("lphoto") != null) {
                 List<PhotoDTO> lphoto = (List<PhotoDTO>) request.getAttribute("lphoto");
                 for (PhotoDTO i : lphoto) {
@@ -80,13 +84,13 @@
             <form method="post" action="UserController">
                 <input type="hidden" name="action" value="deleteResPhoto"/>
                 <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
-                <input type="hidden" name="photoID" value="<%= i.getPhotoID() %>"/>
+                <input type="hidden" name="photoID" value="<%= i.getPhotoID()%>"/>
                 <button class="hover-btn"  type="submit">Delete</button>
             </form>
         </div>
 
-        <%}
-            }%>
+        <%}%>
+        <%}%>
 
         <h1>Add restaurant picture</h1>
 
@@ -99,23 +103,79 @@
         </form>
 
 
+        <%if (request.getAttribute("lent") != null) {
+                List<REntityDTO> lent = (List<REntityDTO>) request.getAttribute("lent");%>
+        <h1>List of tables/rooms</h1>
+
+        <%
+            for (REntityDTO i : lent) {
+        %>
+
+        <div><%= i%></div>
+
+
+        <%}%>
+        <%}%>
+
+
         <h1>Add new table/room</h1>
 
         <%
             String select1 = "";
             String select2 = "";
+            int eFee = 0;
+            if (request.getAttribute("eFee") != null) {
+                eFee = (int) request.getAttribute("eFee");
+            }
+            int eSeatCap = 0;
+            if (request.getAttribute("eSeatCap") != null) {
+                eSeatCap = (int) request.getAttribute("eSeatCap");
+            }
+            int eForwardLim = 0;
+            if (request.getAttribute("eForwardLim") != null) {
+                eForwardLim = (int) request.getAttribute("eForwardLim");
+            }
+
         %>
 
-        <form method="post" action="UserController" enctype="multipart/form-data">
+        <form method="post" action="UserController" >
             <input type="hidden" name="action" value="createEntity"/>
-            Reservation Fee: <input type="text" name="eFee"  required/><br/>
+            <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
+            Reservation Fee: <input type="number" name="eFee"  required value="<%= eFee%>"/><br/>
             Type: 
-            <select id="options" name="eType" value="option2">
-                <option value="option1" <%= select1%>>Table</option>
-                <option value="option2" <%= select2%>>Room</option>
+            <select id="options" name="eType">
+                <option value="Table" <%= select1%>>Table</option>
+                <option value="Room" <%= select2%>>Room</option>
             </select><br/>
-            Seat capacity: <input type="number" name="eSeat" min=1 step=1 required /><br/>
-            <input type="submit" value="Add">
+            Seat capacity: <input type="number" name="eSeatCap" min=1 step=1 required value="<%= eSeatCap%>" /><br/>
+            Forward limit (days): <input type="number" name="eForwardLim" min=1 step=1 required  value="<%= eForwardLim%>"/><br/>
+            Active until: <input type="date" name="eActiveTill"/> (*You can only extend the 'Active Until' date beyond the forward limit*)<br/>
+            Daily hours available:
+            <%
+                boolean[] checkhour = new boolean[24];
+                if (request.getAttribute("checkhour") != null) {
+                    checkhour = (boolean[]) request.getAttribute("checkhour");
+                }
+            %>
+            <%for (int i = 0; i < 24; i++) {%>
+            <input type="checkbox" name="eHour" value=<%= i + ""%> <%= checkhour[i] ? "checked" : ""%> > <%= i%> |
+            <%}%>
+            <br>
+
+            Weekdays available:
+            <%
+                boolean[] checkday = new boolean[7];
+                if (request.getAttribute("checkday") != null) {
+                    checkday = (boolean[]) request.getAttribute("checkday");
+                }
+            %>
+            <%for (int i = 0; i < 7; i++) {%>
+            <input type="checkbox" name="eDay" value=<%= i + ""%> <%= checkday[i] ? "checked" : ""%> > <%= Utils.weekday(i)%> |
+            <%}%>
+            <br>
+
+
+            <input type="submit" value="Create">
             <%
                 String tMessage = "";
                 if (request.getAttribute("createEntMes") != null) {

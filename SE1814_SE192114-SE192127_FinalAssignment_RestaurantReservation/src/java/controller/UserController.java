@@ -5,14 +5,17 @@
  */
 package controller;
 
+import dao.REntityDAO;
 import dao.RestDAO;
 import dao.RestPhotoDAO;
 import dao.UserDAO;
 import dto.PhotoDTO;
+import dto.REntityDTO;
 import dto.RestDTO;
 import dto.UserDTO;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.RequestDispatcher;
@@ -45,6 +48,7 @@ public class UserController extends HttpServlet {
     private UserDAO udao = new UserDAO();
     private RestDAO rdao = new RestDAO();
     private RestPhotoDAO rpdao = new RestPhotoDAO();
+    private REntityDAO edao = new REntityDAO();
 
     public UserDTO getUser(String strUsername) {
         UserDTO newuser = udao.searchByUsername(strUsername);
@@ -240,7 +244,6 @@ public class UserController extends HttpServlet {
 
     private String processRestProfile(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
-        System.out.println("getting restaurant photo list...");
         if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
@@ -250,6 +253,8 @@ public class UserController extends HttpServlet {
         try {
             RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
             List<PhotoDTO> lphoto = (List<PhotoDTO>) rpdao.getAllPhoto(restID);
+            List<REntityDTO> lent = (List<REntityDTO>) edao.EntitiesAtRest(restID);
+            request.setAttribute("lent", lent);
             request.setAttribute("lphoto", lphoto);
             request.setAttribute("rest", rest);
         } catch (Exception e) {
@@ -268,47 +273,97 @@ public class UserController extends HttpServlet {
         int restID = Integer.parseInt(request.getParameter("restID"));
 
         try {
-            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
             try {
                 PhotoDTO rphoto = new PhotoDTO(rpdao.newID(), restID, "");
                 Part filePhoto = request.getPart("rphoto");
                 System.out.println("worked till now" + filePhoto);
                 if (filePhoto != null && filePhoto.getSize() > 0) {
-                    filePhoto.write(REST_IMG_FOLDER + rphoto.getPhotoID() + user.getUserName() + restID+user.getEmail() + ".jpg");
-                    rphoto.setPhoto(rphoto.getPhotoID() + user.getUserName() + restID+user.getEmail() +".jpg");
+                    filePhoto.write(REST_IMG_FOLDER + rphoto.getPhotoID() + user.getUserName() + restID + user.getEmail() + ".jpg");
+                    rphoto.setPhoto(rphoto.getPhotoID() + user.getUserName() + restID + user.getEmail() + ".jpg");
                     rpdao.create(rphoto);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            List<PhotoDTO> lphoto = (List<PhotoDTO>) rpdao.getAllPhoto(restID);
-            request.setAttribute("lphoto", lphoto);
-            request.setAttribute("rest", rest);
+            processRestProfile(request, response);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return url;
     }
+
     private String processDelRestPhoto(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
         System.out.println("adding restaurant photo ...");
         if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
-        UserDTO user = (UserDTO) request.getSession().getAttribute("user");
-        int restID = Integer.parseInt(request.getParameter("restID"));
         int photoID = Integer.parseInt(request.getParameter("photoID"));
-
         try {
-            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
             rpdao.delete(photoID);
-            List<PhotoDTO> lphoto = (List<PhotoDTO>) rpdao.getAllPhoto(restID);
-            request.setAttribute("lphoto", lphoto);
-            request.setAttribute("rest", rest);
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        processRestProfile(request, response);
+        return url;
+    }
+
+    private String processCreateEntity(HttpServletRequest request, HttpServletResponse response) {
+        String url = "RestaurantProfile.jsp";
+        System.out.println("Creating new entity ...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        System.out.println("hello");
+        UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+        int restID = Integer.parseInt(request.getParameter("restID"));
+
+        try {
+            int eFee = Integer.parseInt(request.getParameter("eFee"));
+            String eType = request.getParameter("eType");
+            int eSeatCap = Integer.parseInt(request.getParameter("eSeatCap"));
+            int eForwardLim = Integer.parseInt(request.getParameter("eForwardLim"));
+            
+            int eDaily = 0;
+            String[] eHour = request.getParameterValues("eHour");
+            boolean[] checkhour = new boolean[24];
+            if (eHour != null) {
+                for (String s : eHour) {
+                    System.out.println(s + " - ");
+                    eDaily += Utils.PO2[Integer.parseInt(s)];
+                    checkhour[Integer.parseInt(s)] = true;
+                }
+            }
+            int eWeekly = 0;
+            boolean[] checkday = new boolean[7];
+            String[] eDay = request.getParameterValues("eDay");
+            if (eDay != null) {
+                for (String s : eDay) {
+                    System.out.println(s + " - ");
+                    eWeekly += Utils.PO2[Integer.parseInt(s)];
+                    checkday[Integer.parseInt(s)] = true;
+                }
+            }
+            
+            
+            
+            if(true){
+                
+                request.setAttribute("eSeatCap",eSeatCap );
+                request.setAttribute("eForwardLim",eForwardLim );
+                request.setAttribute("eFee",eFee );
+                request.setAttribute("checkhour", checkhour);
+                request.setAttribute("checkday", checkday);
+            }
+            
+            System.out.println("fee="+eFee + " type= " + eType + " daily= " + eDaily+" weekly="+eWeekly+" seatcap= "+eSeatCap+" forwardlim = "+eForwardLim);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        processRestProfile(request, response);
         return url;
     }
 
@@ -351,10 +406,20 @@ public class UserController extends HttpServlet {
             if (action != null && action.equals("deleteResPhoto")) {
                 url = processDelRestPhoto(request, response);
             }
+            if (action != null && action.equals("createEntity")) {
+                url = processCreateEntity(request, response);
+            }
 
         } catch (Exception e) {
             log("Error at MainController: " + e.toString());
         } finally {
+
+            //testing
+//            Date tdate = new Date(System.currentTimeMillis());
+//            System.out.println("testing date func " + Utils.isActiveEntity(tdate.toString()));
+//            System.out.println("testing date func future " + Utils.isActiveEntity(Utils.xdaysFromNow(100).toString()));
+//            System.out.println("testing date func " + Utils.isActiveEntity(null));
+            //testing
             System.out.println(url + " is final url");
             RequestDispatcher rd = request.getRequestDispatcher(url);
             if (!url.equals("MainController")) {

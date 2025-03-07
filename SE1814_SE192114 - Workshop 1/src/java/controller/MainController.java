@@ -109,7 +109,7 @@ public class MainController extends HttpServlet {
                     estlaunch = Date.valueOf(request.getParameter("txtPdate"));
                     Date currentSqlDate = new Date(System.currentTimeMillis());
                     if (currentSqlDate.after(estlaunch)) {
-                        estlaunch=null;
+                        estlaunch = null;
                     }
 
                 }
