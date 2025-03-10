@@ -33,6 +33,15 @@ public class UserDTO {
     public UserDTO() {
     }
 
+    public UserDTO(String name, String email, String phone, String profilepic) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.profilepic = profilepic;
+    }
+    
+    
+
     public UserDTO(int userID, String name, String userName, String email, String phone, String password, int coins, String profilepic) {
         this.userID = userID;
         this.name = name;

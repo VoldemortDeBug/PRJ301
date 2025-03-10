@@ -18,7 +18,8 @@
         Name:  <%= user.getName()%><br/>
         Email:  <%= user.getEmail()%><br/>
         Phone: <%= user.getPhone()%><br/>
-        <a href="UserProfile.jsp"><img src="users/img/<%= user.getProfilepic()%>"  style="width: 40px; height: 40px; border-radius: 50%"/></a>
+        Coins: <%= user.getCoins() %><br/>
+        <img src="users/img/<%= user.getProfilepic()%>"  style="width: 40px; height: 40px; border-radius: 50%"/>
 
         <h1>UPDATE PROFILE</h1>
 
@@ -43,48 +44,45 @@
         <h1>Add new restaurant</h1>
 
         <%
-        
-            String rnameE ="";
-            String rname = request.getAttribute("rname")+"";
-            if(rname.equals("")){
-                rnameE="(*)";
-                rname="";
+
+            String rnameE = "";
+            String rname = request.getAttribute("rname") + "";
+            if (rname.equals("")) {
+                rnameE = "(*)";
+                rname = "";
             }
-             if(rname.equals("null")){
-                rname="";
+            if (rname.equals("null")) {
+                rname = "";
             }
-            
-            String rlocE ="";
-            String rloc = request.getAttribute("rloc")+"";
-            if(rloc.equals("")){
-                rlocE="(*)";
-                rloc="";
+
+            String rlocE = "";
+            String rloc = request.getAttribute("rloc") + "";
+            if (rloc.equals("")) {
+                rlocE = "(*)";
+                rloc = "";
             }
-             if(rloc.equals("null")){
-                rloc="";
+            if (rloc.equals("null")) {
+                rloc = "";
             }
-            
+
         %>
 
         <form method="post" action="UserController" enctype="multipart/form-data">
             <input type="hidden" name="action" value="createRest"/>
-            Name: <span style="color: red"><%= rnameE %></span>  <input type="text" name="rname" value="<%= rname %>"  /><br/>
-            Location: <span style="color: red"><%= rlocE %></span> <input type="text" name="rloc" value="<%= rloc %>"  /> <br/>
+            Name: <span style="color: red"><%= rnameE%></span>  <input type="text" name="rname" value="<%= rname%>"  /><br/>
+            Location: <span style="color: red"><%= rlocE%></span> <input type="text" name="rloc" value="<%= rloc%>"  /> <br/>
             <input type="submit" value="Save">
             <%
-                String rMessage = request.getAttribute("createRestMes")+"";
+                String rMessage = request.getAttribute("createRestMes") + "";
                 if (rMessage.equals("null")) {
-                    rMessage="";
+                    rMessage = "";
                 }
             %>
-            <span style="color: green"><%= rMessage %></span>
+            <span style="color: green"><%= rMessage%></span>
         </form>
 
-        
-        <a href="Home.jsp"><input type="button" value="Home" /></a>
-        
-        
-        
-            <%@include file="footer.jsp"  %>
+
+
+        <%@include file="footer.jsp"  %>
     </body>
 </html>

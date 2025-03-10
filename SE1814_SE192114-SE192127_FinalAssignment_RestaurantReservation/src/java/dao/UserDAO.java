@@ -124,8 +124,25 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
 
     @Override
     public UserDTO searchByID(Integer id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+        String sql = "SELECT * FROM [Users] WHERE [UserID] = ? ";
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                UserDTO user = new UserDTO(
+                        rs.getString("Name"), 
+                        rs.getString("Email"), 
+                        rs.getString("Phone"),
+                        rs.getString("Profile_Picture")
+                );
+                return user;
+            }
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;    }
 
     @Override
     public boolean delete(Integer id) {

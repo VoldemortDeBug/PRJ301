@@ -8,6 +8,7 @@ package dao;
 import dto.REntityDTO;
 import dto.RestDTO;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +25,7 @@ import util.DBUtils;
 public class REntityDAO implements IDAO<REntityDTO, Integer> {
 
     public int newID() {
-        String sql = "  SELECT MAX(EntityID)as MAXID FROM [ReservedEntites]";
+        String sql = "  SELECT MAX(EntityID) as MAXID FROM [ReservedEntities]";
         try {
             Connection conn = DBUtils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -55,7 +56,7 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
             ps.setInt(1, entity.getEnID());
             ps.setInt(2, entity.getRestID());
             ps.setString(3, entity.getEnType());
-            ps.setDouble(4, entity.getEnFee());
+            ps.setInt(4, entity.getEnFee());
             ps.setDate(5, entity.getActiveTill());
             ps.setInt(6, entity.getSeatCap());
             ps.setInt(7, entity.getForwardLim());
@@ -79,7 +80,28 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
 
     @Override
     public REntityDTO searchByID(Integer id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String sql = "SELECT * FROM [ReservedEntities] WHERE [EntityID]=?";
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                return new REntityDTO(
+                        rs.getInt("EntityID"),
+                        rs.getInt("RestaurantID"), rs.getString("Type"),
+                        rs.getInt("ReservationFee"),
+                        rs.getDate("ActiveTill"),
+                        rs.getInt("SeatCap"),
+                        rs.getInt("ForwardLim"),
+                        rs.getInt("Daily"),
+                        rs.getInt("Weekly")
+                );
+            }
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     @Override
@@ -89,7 +111,20 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
 
     @Override
     public boolean delete(Integer id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String sql = "DELETE FROM [ReservedEntities] WHERE EntityID = ? ;";
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            int n = ps.executeUpdate();
+            return n > 0;
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(REntityDAO.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        } catch (SQLException ex) {
+            Logger.getLogger(REntityDAO.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
     }
 
     @Override
@@ -98,7 +133,7 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
     }
 
     public REntityDTO GetResvEntity(Integer restID, Integer entID) {
-        String sql = "SELECT * FROM [ReservedEntites] WHERE [RestaurantID]=? AND [EntityID]=?";
+        String sql = "SELECT * FROM [ReservedEntities] WHERE [RestaurantID]=? AND [EntityID]=?";
         try {
             Connection conn = DBUtils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -109,7 +144,7 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
                 return new REntityDTO(
                         rs.getInt("EntityID"),
                         rs.getInt("RestaurantID"), rs.getString("Type"),
-                        rs.getDouble("ReservationFee"),
+                        rs.getInt("ReservationFee"),
                         rs.getDate("ActiveTill"),
                         rs.getInt("SeatCap"),
                         rs.getInt("ForwardLim"),
@@ -135,7 +170,7 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
                 REntityDTO rent = new REntityDTO(
                         rs.getInt("EntityID"),
                         rs.getInt("RestaurantID"), rs.getString("Type"),
-                        rs.getDouble("ReservationFee"),
+                        rs.getInt("ReservationFee"),
                         rs.getDate("ActiveTill"),
                         rs.getInt("SeatCap"),
                         rs.getInt("ForwardLim"),
@@ -147,6 +182,21 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
             Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return lrest;
+    }
+
+    public boolean updateActiveTill(Integer entID, Date newEdate) {
+        String sql = " UPDATE [ReservedEntities]  SET ActiveTill = ? WHERE [EntityID] = ? ";
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setDate(1, newEdate);
+            ps.setInt(2, entID);
+            int res = ps.executeUpdate();
+            return res > 0;
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(REntityDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
     }
 
 }

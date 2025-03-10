@@ -16,7 +16,7 @@ public class REntityDTO {
     private int enID;
     private int restID;
     private String enType;
-    private double enFee;
+    private int enFee;
     private Date activeTill;
     private int seatCap; //maximium seat
     private int forwardLim;  //maximum days to the future that can make a reservation
@@ -26,7 +26,7 @@ public class REntityDTO {
     public REntityDTO() {
     }
 
-    public REntityDTO(int enID, int restID, String enType, double enFee, Date activeTill, int seatCap, int forwardLim, int daily, int weekly) {
+    public REntityDTO(int enID, int restID, String enType, int enFee, Date activeTill, int seatCap, int forwardLim, int daily, int weekly) {
         this.enID = enID;
         this.restID = restID;
         this.enType = enType;
@@ -74,7 +74,7 @@ public class REntityDTO {
         this.enType = enType;
     }
 
-    public void setEnFee(double enFee) {
+    public void setEnFee(int enFee) {
         this.enFee = enFee;
     }
 
@@ -98,7 +98,7 @@ public class REntityDTO {
         return enType;
     }
 
-    public double getEnFee() {
+    public int getEnFee() {
         return enFee;
     }
 

@@ -25,10 +25,25 @@
 
         <h1>Restaurant owned by <%= user.getName()%></h1>
 
+        <%
+            String message = "";
+            String color ="red";
+            if(request.getAttribute("message")!=null){
+                message=(String)request.getAttribute("message");
+                if(message.equals("Restaurant is deleted.")){
+                    color="green";
+                }
+            }
+        %>
+
+        <span style="color: <%= color %>"><%= message %></span>
+
         <table>
             <tr>
                 <td>Name</td>
                 <td>Location</td>
+                <td>Tables/Rooms</td>
+                <td>Reservations</td>
             </tr>
 
             <%
@@ -37,11 +52,20 @@
             <tr>
                 <td><%= i.getName()%></td>
                 <td><%= i.getLoc()%></td>
+                <td><%= i.getEntites()%></td>
+                <td><%= i.getReservations() %></td>
                 <td>
                     <form action="UserController" method="post">
                         <input type="hidden" name="action" value="restProfile"/>
-                        <input type="hidden" name="restID" value="<%= i.getResID() %>"/>
+                        <input type="hidden" name="restID" value="<%= i.getResID()%>"/>
                         <input type="submit"  value="Details"/> 
+                    </form>
+                </td>
+                <td>
+                    <form action="UserController" method="post">
+                        <input type="hidden" name="action" value="deleteRestaurant"/>
+                        <input type="hidden" name="restID" value="<%= i.getResID()%>"/>
+                        <input type="submit"  value="Delete"/> 
                     </form>
                 </td>
             </tr>
@@ -49,8 +73,6 @@
         </table>
         <%}
             }%>
-
-        <a href="Home.jsp"><input type="button" value="Home" /></a>
 
         <%@include file="footer.jsp"  %>
 

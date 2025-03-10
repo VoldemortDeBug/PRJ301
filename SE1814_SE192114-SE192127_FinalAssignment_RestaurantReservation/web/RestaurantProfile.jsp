@@ -4,6 +4,7 @@
     Author     : Admin
 --%>
 
+<%@page import="java.sql.Date"%>
 <%@page import="util.Utils"%>
 <%@page import="dto.REntityDTO"%>
 <%@page import="dto.PhotoDTO"%>
@@ -65,12 +66,23 @@
 
         <%
             if (request.getAttribute("rest") != null) {
-                RestDTO rest = (RestDTO) request.getAttribute("rest");
 
+                boolean editmode = false;
+                RestDTO rest = (RestDTO) request.getAttribute("rest");
+                if (rest.getMainPhoto() == null) {
+                    rest.setMainPhoto("Default.jpg");
+                }
+                if (request.getAttribute("edit") != null) {
+                    editmode = true;
+                }
         %>
 
         <h1>Restaurant: <%= rest.getName()%></h1>
         <h1>Location: <%= rest.getLoc()%></h1>
+
+        <h1>Main photo: </h1>
+        <img src="users/rimg/<%= rest.getMainPhoto()%>" alt="<%= rest.getName() + " main photo"%>"/>
+
 
         <h1>Photos:</h1>
 
@@ -85,12 +97,27 @@
                 <input type="hidden" name="action" value="deleteResPhoto"/>
                 <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
                 <input type="hidden" name="photoID" value="<%= i.getPhotoID()%>"/>
+
+                <%if (editmode) {%>
+
                 <button class="hover-btn"  type="submit">Delete</button>
+                <%}%>
             </form>
         </div>
 
         <%}%>
         <%}%>
+
+        <%if (editmode) {%>
+
+        <h1>Update main picture</h1>
+
+        <form method="post" action="UserController" enctype="multipart/form-data">
+            <input type="hidden" name="action" value="updateMainPhoto"/>
+            <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
+            New Profile Photo: <input type="file" name="rphoto" size="50" /><br/>
+            <input type="submit" value="Save">
+        </form>
 
         <h1>Add restaurant picture</h1>
 
@@ -101,6 +128,7 @@
             <input type="submit" value="Save">
 
         </form>
+        <% } %>
 
 
         <%if (request.getAttribute("lent") != null) {
@@ -111,13 +139,37 @@
             for (REntityDTO i : lent) {
         %>
 
-        <div><%= i%></div>
-
+        <span><%= i%>
+        <%if (editmode) {%>
+        <form method="post" action="UserController" >
+            <input type="hidden" name="action" value="updateEntity"/>
+            <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
+            <input type="hidden" name="entID" value="<%= i.getEnID()%>"/>
+            Active date update: <input type="date" name ="newEdate" />
+            <input type="submit" value="Update" />
+        </form>
+        <form method="post" action="UserController" >
+            <input type="hidden" name="action" value="deleteEntity"/>
+            <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
+            <input type="hidden" name="entID" value="<%= i.getEnID()%>"/>
+            <input type="submit" value="Delete <%= i.getEnType()%>" />
+        </form>
+        <% } else {%>
+        <form method="post" action="UserController" >
+            <input type="hidden" name="action" value="reservePage"/>
+            <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
+            <input type="hidden" name="entID" value="<%= i.getEnID()%>"/>
+            <input type="submit" value="<%= i.getEnType()%> details" />
+        </form>
+        <%}%>
+        </span>
+        <br/><br/>
 
         <%}%>
         <%}%>
 
 
+        <%if (editmode) {%>
         <h1>Add new table/room</h1>
 
         <%
@@ -127,6 +179,11 @@
             if (request.getAttribute("eFee") != null) {
                 eFee = (int) request.getAttribute("eFee");
             }
+            if (request.getAttribute("eType") != null) {
+                if (((String) request.getAttribute("eType")).equals("Room")) {
+                    select2 = "selected";
+                }
+            }
             int eSeatCap = 0;
             if (request.getAttribute("eSeatCap") != null) {
                 eSeatCap = (int) request.getAttribute("eSeatCap");
@@ -135,6 +192,11 @@
             if (request.getAttribute("eForwardLim") != null) {
                 eForwardLim = (int) request.getAttribute("eForwardLim");
             }
+            Date eActiveTill = null;
+            if (request.getAttribute("eActiveTill") != null) {
+                eActiveTill = (Date) request.getAttribute("eActiveTill");
+            }
+
 
         %>
 
@@ -149,7 +211,7 @@
             </select><br/>
             Seat capacity: <input type="number" name="eSeatCap" min=1 step=1 required value="<%= eSeatCap%>" /><br/>
             Forward limit (days): <input type="number" name="eForwardLim" min=1 step=1 required  value="<%= eForwardLim%>"/><br/>
-            Active until: <input type="date" name="eActiveTill"/> (*You can only extend the 'Active Until' date beyond the forward limit*)<br/>
+            Active until: <input type="date" name="eActiveTill" value="<%= eActiveTill%>" /> (*You can only extend the 'Active Until' date beyond the forward limit*)<br/>
             Daily hours available:
             <%
                 boolean[] checkhour = new boolean[24];
@@ -158,7 +220,7 @@
                 }
             %>
             <%for (int i = 0; i < 24; i++) {%>
-            <input type="checkbox" name="eHour" value=<%= i + ""%> <%= checkhour[i] ? "checked" : ""%> > <%= i%> |
+            <input type="checkbox" name="eHour" value=<%= i + ""%> <%= checkhour[i] ? "checked" : ""%> > <%= i%>h |
             <%}%>
             <br>
 
@@ -184,12 +246,10 @@
             %>
             <span style="color: green"><%= tMessage%></span>
         </form>
+        <br/>
+        <% } %>
 
-
-
-        <a href="Home.jsp"><input type="button" value="Home" /></a>
-
-        <%}%>
+        <% }%>
         <%@include file="footer.jsp"  %>
 
     </body>

@@ -6,13 +6,18 @@
 package util;
 
 import dao.RestDAO;
+import dto.REntityDTO;
+import dto.ReservationDTO;
 import dto.RestDTO;
 import dto.UserDTO;
 import static java.lang.Math.abs;
 import java.sql.Date;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
 
@@ -30,6 +35,12 @@ public class Utils {
 
     public static boolean validString(String s) {
         return (!s.equals("") && s.trim().length() > 0);
+    }
+    
+
+    public static Date xDaysFromy(int x, Date y) {
+        LocalDate localDate = y.toLocalDate().plusDays(x);
+        return Date.valueOf(localDate);
     }
 
     public static Date xdaysFromNow(int x) {
@@ -106,10 +117,14 @@ public class Utils {
         }
         return -1;
     }
+    
+    public static int toWeekDay(Date d){
+        LocalDate date = d.toLocalDate();
+        DayOfWeek dow = date.getDayOfWeek();
+        String weekday = dow.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+        return weekly(weekday);
+    }
 
-    // x= 1111 vs y= 0110
-    // x = 1111 1111 1111 1011 1111 0111 
-    // y = 0000 0000 1111 1101 1111 1111 
     public static boolean hasbit(int x, int y) {
         for (int i = 0; i < 24; i++) {
             int a = abs(x / PO2[i]);
@@ -119,6 +134,16 @@ public class Utils {
             }
         }
         return true;
+    }
+    
+    public static int reservationAtTime(List<ReservationDTO> lresv ,int time, Date date) {
+        //time = 0~23
+        for(ReservationDTO i:lresv){
+            if(i.getDate().equals(date) && Utils.hasbit(i.getHours(), PO2[time]) ){
+                return i.getRsvID();
+            }
+        }
+        return -1;
     }
 
 }

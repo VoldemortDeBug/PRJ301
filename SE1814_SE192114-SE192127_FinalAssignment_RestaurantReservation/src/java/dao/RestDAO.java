@@ -48,8 +48,8 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
     @Override
     public boolean create(RestDTO entity) {
 
-        String sql = "INSERT INTO [Restaurants] ([RestaurantID], [Name], [Location], [OwnerID])"
-                + " VALUES (?, ?, ?, ? )";
+        String sql = "INSERT INTO [Restaurants] ([RestaurantID], [Name], [Location], [OwnerID], [MainPhoto])"
+                + " VALUES (?, ?, ?, ?, ? )";
 
         try {
             Connection conn = DBUtils.getConnection();
@@ -57,7 +57,8 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
             ps.setInt(1, entity.getResID());
             ps.setString(2, entity.getName());
             ps.setString(3, entity.getLoc());
-            ps.setInt(4, entity.getOwnerID());;
+            ps.setInt(4, entity.getOwnerID());
+            ps.setString(5, entity.getMainPhoto());
             int n = ps.executeUpdate();
             return n > 0;
         } catch (ClassNotFoundException ex) {
@@ -71,7 +72,28 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
 
     @Override
     public List<RestDTO> readAll() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String sql = "SELECT * FROM [Restaurants]  ";
+        List<RestDTO> lrest = new ArrayList<>();
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                RestDTO rest = new RestDTO(
+                        rs.getInt("RestaurantID"),
+                        rs.getString("Name"),
+                        rs.getString("Location"),
+                        rs.getInt("OwnerID"),
+                        rs.getString("MainPhoto")
+                );
+                lrest.add(rest);
+            }
+            return lrest;
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     @Override
@@ -87,7 +109,8 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
                         rs.getInt("RestaurantID"),
                         rs.getString("Name"),
                         rs.getString("Location"),
-                        rs.getInt("OwnerID")
+                        rs.getInt("OwnerID"),
+                        rs.getString("MainPhoto")
                 );
                 return rest;
             }
@@ -104,7 +127,20 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
 
     @Override
     public boolean delete(Integer id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String sql = "DELETE FROM [Restaurants] WHERE [RestaurantID] = ? ;";
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            int n = ps.executeUpdate();
+            return n > 0;
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(REntityDAO.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        } catch (SQLException ex) {
+            Logger.getLogger(REntityDAO.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
     }
 
     @Override
@@ -125,7 +161,8 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
                         rs.getInt("RestaurantID"),
                         rs.getString("Name"),
                         rs.getString("Location"),
-                        rs.getInt("OwnerID")
+                        rs.getInt("OwnerID"),
+                        rs.getString("MainPhoto")
                 );
                 lrest.add(rest);
             }
@@ -134,9 +171,9 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
         }
         return lrest;
     }
-    
-    public RestDTO restOwnedBy(int restID,int userID){
-        String sql="SELECT * FROM [Restaurants] WHERE [OwnerID]=? AND [RestaurantID]=?";
+
+    public RestDTO restOwnedBy(int restID, int userID) {
+        String sql = "SELECT * FROM [Restaurants] WHERE [OwnerID]=? AND [RestaurantID]=?";
         try {
             Connection conn = DBUtils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -144,7 +181,13 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
             ps.setInt(2, restID);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                RestDTO rest=new RestDTO(restID, rs.getString("Name"), rs.getString("Location"), userID);
+                RestDTO rest = new RestDTO(
+                        rs.getInt("RestaurantID"),
+                        rs.getString("Name"),
+                        rs.getString("Location"),
+                        rs.getInt("OwnerID"),
+                        rs.getString("MainPhoto")
+                );
                 return rest;
             }
         } catch (ClassNotFoundException | SQLException ex) {
@@ -153,5 +196,19 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
         return null;
     }
 
+    public boolean updateMainPhoto(int restID, String mainphoto) {
+        String sql = " UPDATE [Restaurants]  SET MainPhoto= ? WHERE [RestaurantID] = ? ";
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, mainphoto);
+            ps.setInt(2, restID);
+            int res = ps.executeUpdate();
+            return res > 0;
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(REntityDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
 
 }

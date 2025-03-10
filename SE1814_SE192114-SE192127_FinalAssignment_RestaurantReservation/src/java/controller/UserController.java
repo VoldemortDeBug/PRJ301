@@ -6,11 +6,13 @@
 package controller;
 
 import dao.REntityDAO;
+import dao.ReservationDAO;
 import dao.RestDAO;
 import dao.RestPhotoDAO;
 import dao.UserDAO;
 import dto.PhotoDTO;
 import dto.REntityDTO;
+import dto.ReservationDTO;
 import dto.RestDTO;
 import dto.UserDTO;
 import java.io.IOException;
@@ -49,6 +51,7 @@ public class UserController extends HttpServlet {
     private RestDAO rdao = new RestDAO();
     private RestPhotoDAO rpdao = new RestPhotoDAO();
     private REntityDAO edao = new REntityDAO();
+    private ReservationDAO rsvdao = new ReservationDAO();
 
     public UserDTO getUser(String strUsername) {
         UserDTO newuser = udao.searchByUsername(strUsername);
@@ -188,16 +191,25 @@ public class UserController extends HttpServlet {
         return url;
     }
 
-    private String processRestList(HttpServletRequest request, HttpServletResponse response) {
+    private String processOwnedRestList(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestList.jsp";
         System.out.println("getting restaurant list in proccess...");
         if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
-
+        Date currentSqlDate = new Date(System.currentTimeMillis());
         try {
             List<RestDTO> rlist = rdao.searchOwnedBy(user.getUserID());
+            for (RestDTO i : rlist) {
+                List<REntityDTO> lrent = edao.EntitiesAtRest(i.getResID());
+                int c = 0;
+                for (REntityDTO j : lrent) {
+                    c += rsvdao.GetReservationsAtEntity(j.getEnID()).size();
+                }
+                i.setEntites(lrent.size());
+                i.setReservations(c);
+            }
             request.setAttribute("rlist", rlist);
         } catch (Exception e) {
             e.printStackTrace();
@@ -229,7 +241,7 @@ public class UserController extends HttpServlet {
             return url = "UserProfile.jsp";
         }
 
-        RestDTO rest = new RestDTO(rdao.newID(), rname, rloc, user.getUserID());
+        RestDTO rest = new RestDTO(rdao.newID(), rname, rloc, user.getUserID(), null);
 
         try {
             rdao.create(rest);
@@ -257,6 +269,36 @@ public class UserController extends HttpServlet {
             request.setAttribute("lent", lent);
             request.setAttribute("lphoto", lphoto);
             request.setAttribute("rest", rest);
+            request.setAttribute("edit", true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return url;
+    }
+
+    private String processClientRestProfile(HttpServletRequest request, HttpServletResponse response) {
+        String url = "RestaurantProfile.jsp";
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+
+        int restID = Integer.parseInt(request.getParameter("restID"));
+        System.out.println(restID);
+
+        try {
+            RestDTO rest = rdao.searchByID(restID);
+            List<PhotoDTO> lphoto = (List<PhotoDTO>) rpdao.getAllPhoto(restID);
+            List<REntityDTO> lent = (List<REntityDTO>) edao.EntitiesAtRest(restID);
+            List<REntityDTO> filteredList = new ArrayList<>();
+            Date currentdate = new Date(System.currentTimeMillis());
+            for (REntityDTO ent : lent) {
+                if (!ent.getActiveTill().before(currentdate)) {
+                    filteredList.add(ent);
+                }
+            }
+            request.setAttribute("lent", filteredList);
+            request.setAttribute("lphoto", lphoto);
+            request.setAttribute("rest", rest);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -278,8 +320,8 @@ public class UserController extends HttpServlet {
                 Part filePhoto = request.getPart("rphoto");
                 System.out.println("worked till now" + filePhoto);
                 if (filePhoto != null && filePhoto.getSize() > 0) {
-                    filePhoto.write(REST_IMG_FOLDER + rphoto.getPhotoID() + user.getUserName() + restID + user.getEmail() + ".jpg");
-                    rphoto.setPhoto(rphoto.getPhotoID() + user.getUserName() + restID + user.getEmail() + ".jpg");
+                    filePhoto.write(REST_IMG_FOLDER + rphoto.getPhotoID() + "_" + user.getUserName() + "_" + restID + user.getEmail() + ".jpg");
+                    rphoto.setPhoto(rphoto.getPhotoID() + "_" + user.getUserName() + "_" + restID + user.getEmail() + ".jpg");
                     rpdao.create(rphoto);
                 }
             } catch (Exception e) {
@@ -293,13 +335,52 @@ public class UserController extends HttpServlet {
         return url;
     }
 
+    private String processUpdateMainPhoto(HttpServletRequest request, HttpServletResponse response) {
+        String url = "RestaurantProfile.jsp";
+        System.out.println("updating main restaurant photo ...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+        int restID = Integer.parseInt(request.getParameter("restID"));
+        RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
+
+        try {
+            PhotoDTO rphoto = new PhotoDTO(rpdao.newID(), restID, "");
+            Part filePhoto = request.getPart("rphoto");
+
+            String photoname = rest.getMainPhoto();
+            if (photoname == null || photoname.equals("")) {
+                photoname = rest.getRestID() + "_MAIN_" + ".jpg";
+                rest.setMainPhoto(photoname);
+            }
+
+            if (filePhoto != null && filePhoto.getSize() > 0) {
+                filePhoto.write(REST_IMG_FOLDER + photoname);
+                rphoto.setPhoto(rphoto.getPhotoID() + photoname);
+                rdao.updateMainPhoto(restID, photoname);
+            }
+
+            processRestProfile(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return url;
+    }
+
     private String processDelRestPhoto(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
-        System.out.println("adding restaurant photo ...");
+        System.out.println("deleting restaurant photo ...");
         if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
         int photoID = Integer.parseInt(request.getParameter("photoID"));
+        int restID = Integer.parseInt(request.getParameter("restID"));
+        UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+        RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
+        if (rest == null) {
+            return "Login.jsp";
+        }
         try {
             rpdao.delete(photoID);
         } catch (Exception e) {
@@ -319,13 +400,21 @@ public class UserController extends HttpServlet {
         System.out.println("hello");
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
         int restID = Integer.parseInt(request.getParameter("restID"));
+        RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
+        if (rest == null) {
+            return "Login.jsp";
+        }
 
         try {
             int eFee = Integer.parseInt(request.getParameter("eFee"));
             String eType = request.getParameter("eType");
             int eSeatCap = Integer.parseInt(request.getParameter("eSeatCap"));
             int eForwardLim = Integer.parseInt(request.getParameter("eForwardLim"));
-            
+            Date eActiveTill = null;
+            if (request.getParameter("eActiveTill") != null && !request.getParameter("eActiveTill").equals("")) {
+                eActiveTill = Date.valueOf(request.getParameter("eActiveTill"));
+            }
+
             int eDaily = 0;
             String[] eHour = request.getParameterValues("eHour");
             boolean[] checkhour = new boolean[24];
@@ -346,24 +435,417 @@ public class UserController extends HttpServlet {
                     checkday[Integer.parseInt(s)] = true;
                 }
             }
-            
-            
-            
-            if(true){
-                
-                request.setAttribute("eSeatCap",eSeatCap );
-                request.setAttribute("eForwardLim",eForwardLim );
-                request.setAttribute("eFee",eFee );
+
+            boolean chE = false;
+            if (eFee <= 0) {
+                chE = true;
+            }
+            if (!eType.equals("Room") && !eType.equals("Table")) {
+                chE = true;
+            }
+            if (eSeatCap <= 0) {
+                chE = true;
+            }
+            if (eForwardLim <= 0) {
+                chE = true;
+            }
+            if (eActiveTill == null) {
+                chE = true;
+            }
+            if (eDaily == 0) {
+                chE = true;
+            }
+            if (eWeekly == 0) {
+                chE = true;
+            }
+
+            if (chE) {
+                request.setAttribute("eFee", eFee);
+                request.setAttribute("eType", eType);
+                request.setAttribute("eSeatCap", eSeatCap);
+                request.setAttribute("eForwardLim", eForwardLim);
+                request.setAttribute("eActiveTill", eActiveTill);
                 request.setAttribute("checkhour", checkhour);
                 request.setAttribute("checkday", checkday);
+            } else {
+                REntityDTO newEntity = new REntityDTO(edao.newID(), restID, eType, eFee, eActiveTill, eSeatCap, eForwardLim, eDaily, eWeekly);
+                System.out.println(newEntity);
+                edao.create(newEntity);
             }
-            
-            System.out.println("fee="+eFee + " type= " + eType + " daily= " + eDaily+" weekly="+eWeekly+" seatcap= "+eSeatCap+" forwardlim = "+eForwardLim);
+
+            System.out.println("fee=" + eFee + " type= " + eType + " daily= " + eDaily + " weekly=" + eWeekly + " seatcap= " + eSeatCap + " forwardlim = " + eForwardLim);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
         processRestProfile(request, response);
+        return url;
+    }
+
+    private void processUpdateEntity(HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("changing entity active date ...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return;
+        }
+        Date newEdate = null;
+        if (request.getParameter("newEdate") != null && !request.getParameter("newEdate").equals("")) {
+            newEdate = Date.valueOf(request.getParameter("newEdate"));
+
+            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+            int restID = Integer.parseInt(request.getParameter("restID"));
+            int entID = Integer.parseInt(request.getParameter("entID"));
+            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID()); // get direct restaurant to ensure it's valid restaurant from valid user, prevent hacking.
+            REntityDTO rent = edao.GetResvEntity(rest.getResID(), entID);
+            Date currentSqlDate = new Date(System.currentTimeMillis());
+            currentSqlDate = Utils.xdaysFromNow(rent.getForwardLim());
+            if (newEdate.after(currentSqlDate)) {
+                edao.updateActiveTill(entID, newEdate);
+            } else {
+                return;
+            }
+        }
+
+        try {
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return;
+    }
+
+    private void processDeleteEntity(HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("changing entity active date ...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return;
+        }
+        UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+        int restID = Integer.parseInt(request.getParameter("restID"));
+        int entID = Integer.parseInt(request.getParameter("entID"));
+        RestDTO rest = rdao.restOwnedBy(restID, user.getUserID()); // get direct restaurant to ensure it's valid restaurant from valid user, prevent hacking.
+        REntityDTO rent = edao.GetResvEntity(rest.getResID(), entID);
+        Date currentSqlDate = new Date(System.currentTimeMillis());
+        if (currentSqlDate.after(Utils.xDaysFromy(1, rent.getActiveTill()))) {
+            //delet all reservation (because there's no reservation in the future)
+            List<ReservationDTO> rsvList = rsvdao.GetReservationsAtEntity(rent.getEnID());
+            for (ReservationDTO i : rsvList) {
+                if (currentSqlDate.after(i.getDate())) {
+                    rsvdao.delete(i.getRsvID());
+                }
+            }
+            //delete enityt
+            edao.delete(rent.getEnID());
+        } else {
+            System.out.println("CANNOT DELETE");
+            return;
+        }
+
+        try {
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return;
+    }
+
+    private String processHome(HttpServletRequest request, HttpServletResponse response) {
+        String url = "Home.jsp";
+        System.out.println("Entering home...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        request.setAttribute("allrest", rdao.readAll());
+        return url;
+    }
+
+    private String processReservePage(HttpServletRequest request, HttpServletResponse response) {
+        String url = "Reserve.jsp";
+        System.out.println("Going to reserve page...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+
+        try {
+            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+            int restID = Integer.parseInt(request.getParameter("restID"));
+            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
+            if (rest != null) {
+                System.out.println("OWNER CHECKING HIS RESTAURANT");
+                request.setAttribute("owner", true);
+            }
+        } catch (Exception e) {
+        }
+
+        try {
+            int restID = Integer.parseInt(request.getParameter("restID"));
+            int entID = Integer.parseInt(request.getParameter("entID"));
+            RestDTO rest = rdao.searchByID(restID);
+            REntityDTO rent = edao.searchByID(entID);
+            request.setAttribute("rest", rest);
+            request.setAttribute("rent", rent);
+
+            //showing tthe available dates
+            int ap = 0; //available page
+            if (request.getParameter("ap") != null) {
+                ap = Integer.parseInt(request.getParameter("ap"));
+            }
+            System.out.println("current showing date: " + ap + " " + Utils.xdaysFromNow(0 + ap));
+            if (ap < 0) {
+                ap = 0;
+            }
+            Date idate;
+            for (int i = 0; i < 7; i++) {
+                idate = Utils.xdaysFromNow(i + ap);
+                System.out.println("reservation at " + idate);
+                List<ReservationDTO> lresv = rsvdao.GetReservationsAtDate(idate, rent.getEnID());
+                request.setAttribute(idate + "", lresv);
+                request.setAttribute("ap", ap);
+            }
+
+            return url;
+        } catch (Exception e) {
+            System.out.println("ERROR");
+            return processHome(request, response);
+        }
+    }
+
+    private String processMakeReservation(HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("Making reservation...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        try {
+            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+            int restID = Integer.parseInt(request.getParameter("restID"));
+            int entID = Integer.parseInt(request.getParameter("entID"));
+            RestDTO rest = rdao.searchByID(restID);
+            REntityDTO rent = edao.searchByID(entID);
+            int rSeat = Integer.parseInt(request.getParameter("rSeat"));
+            Date rDate = null;
+            if (request.getParameter("rDate") != null && !request.getParameter("rDate").equals("")) {
+                rDate = Date.valueOf(request.getParameter("rDate"));
+            }
+
+            int rDaily = 0;
+            String[] rHour = request.getParameterValues("rHour");
+
+            boolean[] checkhour = new boolean[24];
+            if (rHour != null) {
+                for (String s : rHour) {
+                    System.out.println(s + " - ");
+                    rDaily += Utils.PO2[Integer.parseInt(s)];
+                    checkhour[Integer.parseInt(s)] = true;
+                }
+            }
+            Date limDate = Utils.xdaysFromNow(rent.getForwardLim()).before(rent.getActiveTill()) ? Utils.xdaysFromNow(rent.getForwardLim()) : rent.getActiveTill();
+
+            if (rDaily == 0 || rSeat <= 0 || rSeat > rent.getSeatCap() || rDate == null || rDate.after(limDate) || !Utils.hasbit(rent.getWeekly(), Utils.toWeekDay(rDate))) {
+                request.setAttribute("rSeat", rSeat);
+                request.setAttribute("rDate", rDate);
+                request.setAttribute("checkhour", checkhour);
+                return processReservePage(request, response);
+            }
+
+            int dailyLimit = rent.getDaily();
+            List<ReservationDTO> lresv = rsvdao.GetReservationsAtDate(rDate, rent.getEnID());
+            for (ReservationDTO i : lresv) {
+                if (!Utils.hasbit(dailyLimit, i.getHours())) {
+                    //the old reservations must be in the limit, otherwise something went wrong badly
+                    System.out.println("There's an error in server, cannot make any more reservation.");
+                    request.getSession().invalidate();
+                    return LOGIN_PAGE;
+                }
+                dailyLimit -= i.getHours();
+            }
+
+            if (!Utils.hasbit(dailyLimit, rDaily)) {
+                //that time for today is not available.
+                request.setAttribute("rSeat", rSeat);
+                request.setAttribute("rDate", rDate);
+                request.setAttribute("checkhour", checkhour);
+                return processReservePage(request, response);
+            }
+
+            System.out.println("rSeat=" + rSeat + " rdate= " + rDate + "total fee= " + rent.getEnFee() * Integer.bitCount(rDaily));
+            System.out.println("Done choosing, moving to receipt");
+
+            request.setAttribute("rest", rest);
+            request.setAttribute("rent", rent);
+            request.setAttribute("rSeat", rSeat);
+            request.setAttribute("rDate", rDate);
+            request.setAttribute("checkhour", checkhour);
+            request.setAttribute("rDaily", rDaily);
+            return "Receipt.jsp";
+
+        } catch (Exception e) {
+            System.out.println("ERROR");
+            return processHome(request, response);
+        }
+    }
+
+    private String processConfirmReservation(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("Confirming reservation...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+
+        try {
+            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+            int restID = Integer.parseInt(request.getParameter("restID"));
+            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
+            if (rest != null) {
+                System.out.println("YOU CANNOT RESERVE IN YOUR OWN RESTAURANT");
+                return processReservePage(request, response);
+            }
+        } catch (Exception e) {
+        }
+
+        try {
+            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+            int restID = Integer.parseInt(request.getParameter("restID"));
+            int entID = Integer.parseInt(request.getParameter("entID"));
+            RestDTO rest = rdao.searchByID(restID);
+            REntityDTO rent = edao.searchByID(entID);
+
+            int rSeat = Integer.parseInt(request.getParameter("rSeat"));
+            Date rDate = null;
+            if (request.getParameter("rDate") != null && !request.getParameter("rDate").equals("")) {
+                rDate = Date.valueOf(request.getParameter("rDate"));
+            }
+            int rDaily = Integer.parseInt(request.getParameter("rDaily"));
+
+            Date limDate = Utils.xdaysFromNow(rent.getForwardLim()).before(rent.getActiveTill()) ? Utils.xdaysFromNow(rent.getForwardLim()) : rent.getActiveTill();
+
+            if (rDaily == 0 || rSeat <= 0 || rSeat > rent.getSeatCap() || rDate == null || rDate.after(limDate) || !Utils.hasbit(rent.getWeekly(), Utils.toWeekDay(rDate))) {
+                return processReservePage(request, response);
+            }
+
+            int dailyLimit = rent.getDaily();
+            List<ReservationDTO> lresv = rsvdao.GetReservationsAtDate(rDate, rent.getEnID());
+            for (ReservationDTO i : lresv) {
+                if (!Utils.hasbit(dailyLimit, i.getHours())) {
+                    //the old reservations must be in the limit, otherwise something went wrong badly
+                    System.out.println("There's an error in server, cannot make any more reservation.");
+                    request.getSession().invalidate();
+                    return LOGIN_PAGE;
+                }
+                dailyLimit -= i.getHours();
+            }
+            if (!Utils.hasbit(dailyLimit, rDaily)) {
+                //error with confirmation, someone probably made another reservation for that time first.                
+                return processReservePage(request, response);
+            }
+            UserDTO userFromDatabase = udao.searchByUsername(user.getUserName());
+            if (userFromDatabase.getCoins() < (rent.getEnFee() * Integer.bitCount(rDaily))) {
+                request.setAttribute("notEnoughCoins", "Your account does not have enough coins to make this reservation. Try again.");
+                return processReservePage(request, response);
+            }
+
+            ReservationDTO reservation = new ReservationDTO(rsvdao.newID(), user.getUserID(), rent.getEnID(), rDaily, rDate, rSeat);
+            rsvdao.makeReservation(reservation, rent.getEnFee() * Integer.bitCount(rDaily));
+
+            System.out.println("Sucessfully making reservation");
+            userFromDatabase = udao.searchByUsername(user.getUserName());
+            request.getSession().setAttribute("user", userFromDatabase);
+
+        } catch (Exception e) {
+            System.out.println("ERROR");
+            return processHome(request, response);
+        }
+
+        return processReservePage(request, response);
+    }
+
+    private String processMyReservations(HttpServletRequest request, HttpServletResponse response) {
+        String url = "UserReservations.jsp";
+        System.out.println("Checking my reservationss...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        try {
+
+            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+            List<ReservationDTO> lresv = rsvdao.GetReservationsByUser(user.getUserID());
+            request.setAttribute("allresv", lresv);
+
+        } catch (Exception e) {
+        }
+
+        return url;
+    }
+
+    private String processCancelReservation(HttpServletRequest request, HttpServletResponse response) {
+        String url = LOGIN_PAGE;
+        System.out.println("Checking my reservationss...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        try {
+
+            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+            int rsvID = Integer.parseInt(request.getParameter("rsvID"));
+            ReservationDTO rsv = rsvdao.GetReservationByUser(user.getUserID(), rsvID);
+            rsvdao.delete(rsv.getRsvID());
+
+            return processMyReservations(request, response);
+
+        } catch (Exception e) {
+        }
+
+        return url;
+    }
+
+    private String processDeleteRestaurant(HttpServletRequest request, HttpServletResponse response) {
+        String url = LOGIN_PAGE;
+        System.out.println("Checking my reservationss...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+        try {
+
+            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+            int restID = Integer.parseInt(request.getParameter("restID"));
+            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
+
+            if (edao.EntitiesAtRest(rest.getResID()).size() > 0) {
+                request.setAttribute("message", "There's still tables or rooms in this restaurant. Please delete all tables and rooms before trying to delete the restaurant.");
+                return processOwnedRestList(request, response);
+            }
+
+            rdao.delete(rest.getResID());
+            request.setAttribute("message", "Restaurant is deleted.");
+
+            return processOwnedRestList(request, response);
+        } catch (Exception e) {
+        }
+
+        return url;
+    }
+
+    private String processCheckReservation(HttpServletRequest request, HttpServletResponse response) {
+        String url = "ReservationDetail.jsp";
+        
+        System.out.println("checking reservation...");
+        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+            return "Login.jsp";
+        }
+
+        try {
+            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+            int rsvID = Integer.parseInt(request.getParameter("rsvID"));
+            ReservationDTO resv = rsvdao.searchByID(rsvID);
+            REntityDTO rent = edao.searchByID(resv.getEntID());
+            RestDTO rest = rdao.searchByID(rent.getRestID());
+            UserDTO rsvUser = udao.searchByID(resv.getUserID());
+            if (rest != null && rent != null && resv != null) {
+                request.setAttribute("resv", resv);
+                request.setAttribute("rest", rest);
+                request.setAttribute("rent", rent);
+                request.setAttribute("rsvUser", rsvUser);
+                
+            }
+        } catch (Exception e) {
+        }
         return url;
     }
 
@@ -391,8 +873,8 @@ public class UserController extends HttpServlet {
             if (action != null && action.equals("updateProfile")) {
                 url = processUpdateProfile(request, response);
             }
-            if (action != null && action.equals("restList.jsp")) {
-                url = processRestList(request, response);
+            if (action != null && action.equals("ownedRestList.jsp")) {
+                url = processOwnedRestList(request, response);
             }
             if (action != null && action.equals("createRest")) {
                 url = processCreateRest(request, response);
@@ -403,24 +885,61 @@ public class UserController extends HttpServlet {
             if (action != null && action.equals("addRestPic")) {
                 url = processAddRestPhoto(request, response);
             }
+            if (action != null && action.equals("updateMainPhoto")) {
+                url = processUpdateMainPhoto(request, response);
+            }
             if (action != null && action.equals("deleteResPhoto")) {
                 url = processDelRestPhoto(request, response);
             }
             if (action != null && action.equals("createEntity")) {
                 url = processCreateEntity(request, response);
             }
+            if (action != null && action.equals("updateEntity")) {
+                processUpdateEntity(request, response);
+                url = processRestProfile(request, response);
+            }
+            if (action != null && action.equals("deleteEntity")) {
+                processDeleteEntity(request, response);
+                url = processRestProfile(request, response);
+            }
+            if (action != null && action.equals("home")) {
+                url = processHome(request, response);
+            }
+            if (action != null && action.equals("clientRestProfile")) {
+                url = processClientRestProfile(request, response);
+            }
+            if (action != null && action.equals("reservePage")) {
+                url = processReservePage(request, response);
+            }
+            if (action != null && action.equals("makeReservation")) {
+                url = processMakeReservation(request, response);
+            }
+            if (action != null && action.equals("confirmReservation")) {
+                url = processConfirmReservation(request, response);
+            }
+            if (action != null && action.equals("myReservations")) {
+                url = processMyReservations(request, response);
+            }
+            if (action != null && action.equals("cancelReservation")) {
+                url = processCancelReservation(request, response);
+            }
+            if (action != null && action.equals("deleteRestaurant")) {
+                url = processDeleteRestaurant(request, response);
+            }
+            if (action != null && action.equals("checkReservation")) {
+                url = processCheckReservation(request, response);
+            }
 
+            if (url.equals("Home.jsp")) {
+                url = processHome(request, response);
+            }
         } catch (Exception e) {
             log("Error at MainController: " + e.toString());
         } finally {
-
             //testing
-//            Date tdate = new Date(System.currentTimeMillis());
-//            System.out.println("testing date func " + Utils.isActiveEntity(tdate.toString()));
-//            System.out.println("testing date func future " + Utils.isActiveEntity(Utils.xdaysFromNow(100).toString()));
-//            System.out.println("testing date func " + Utils.isActiveEntity(null));
             //testing
             System.out.println(url + " is final url");
+
             RequestDispatcher rd = request.getRequestDispatcher(url);
             if (!url.equals("MainController")) {
                 rd.forward(request, response);

@@ -17,16 +17,43 @@ public class RestDTO {
     private String name;
     private String loc;
     private int OwnerID;
-    private List<PhotoDTO> lphoto;
+    private String mainPhoto = null;
+    private int entites = 0;
+    private int reservations = 0;
 
-    public RestDTO(int resID, String name, String loc, int OwnerID) {
+    public RestDTO(int resID, String name, String loc, int OwnerID, String mainphoto) {
         this.restID = resID;
         this.name = name;
         this.loc = loc;
         this.OwnerID = OwnerID;
+        this.mainPhoto = mainphoto;
+    }
+
+    public int getEntites() {
+        return entites;
+    }
+
+    public void setEntites(int entites) {
+        this.entites = entites;
+    }
+
+    public int getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(int reservations) {
+        this.reservations = reservations;
     }
 
     public RestDTO() {
+    }
+
+    public String getMainPhoto() {
+        return mainPhoto;
+    }
+
+    public void setMainPhoto(String mainPhoto) {
+        this.mainPhoto = mainPhoto;
     }
 
     public int getResID() {
@@ -65,16 +92,12 @@ public class RestDTO {
         return restID;
     }
 
-    public List<PhotoDTO> getLphoto() {
-        return lphoto;
-    }
-
     public void setRestID(int restID) {
         this.restID = restID;
     }
 
-    public void setLphoto(List<PhotoDTO> lphoto) {
-        this.lphoto = lphoto;
+    @Override
+    public String toString() {
+        return "RestDTO{" + "restID=" + restID + ", name=" + name + ", loc=" + loc + ", OwnerID=" + OwnerID + ", mainPhoto=" + mainPhoto + '}';
     }
-
 }
