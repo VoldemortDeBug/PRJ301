@@ -577,10 +577,24 @@ public class UserController extends HttpServlet {
         }
         if (request.getParameter("sortterm").equals("a-z")) {
             request.setAttribute("sortterm", "z-a");
-        }else{
+        } else {
             request.setAttribute("sortterm", "a-z");
         }
         request.setAttribute("allrest", rdao.readAll());
+        return url;
+    }
+
+    private String processSearchName(HttpServletRequest request, HttpServletResponse response) {
+        String url = "Home.jsp";
+        System.out.println("Entering home...");
+        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
+            return "Login.jsp";
+        }
+
+        String sortterm = request.getParameter("sortterm");
+        String searchName = request.getParameter("searchName");
+        request.setAttribute("sortterm", sortterm);
+        request.setAttribute("allrest", rdao.searchByName(searchName));
         return url;
     }
 
@@ -939,6 +953,9 @@ public class UserController extends HttpServlet {
             }
             if (action != null && action.equals("sortHome")) {
                 url = processSortHome(request, response);
+            }
+            if (action != null && action.equals("searchName")) {
+                url = processSearchName(request, response);
             }
 
             if (url.equals("Home.jsp")) {

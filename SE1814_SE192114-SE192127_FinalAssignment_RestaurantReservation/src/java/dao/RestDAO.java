@@ -215,4 +215,37 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
         return false;
     }
 
+    public List<RestDTO> searchByName(String rname) {
+        List<RestDTO> lrest = new ArrayList<>();
+        String sql = "SELECT r.* "
+                + "FROM Restaurants r "
+                + "JOIN ReservedEntities re ON r.RestaurantID = re.RestaurantID "
+                + "WHERE r.Name = ? "
+                + "GROUP BY r.RestaurantID, r.Name, r.Location, r.OwnerID, r.MainPhoto, r.TotalProfit "
+                + "HAVING COUNT(re.EntityID) > 0; ";
+
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, "%" + rname + "%");
+            System.out.println("searching by title " + rname);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                RestDTO rest = new RestDTO(
+                        rs.getInt("RestaurantID"),
+                        rs.getString("Name"),
+                        rs.getString("Location"),
+                        rs.getInt("OwnerID"),
+                        rs.getString("MainPhoto"),
+                        rs.getInt("TotalProfit")
+                );
+                lrest.add(rest);
+            }
+            return lrest;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }

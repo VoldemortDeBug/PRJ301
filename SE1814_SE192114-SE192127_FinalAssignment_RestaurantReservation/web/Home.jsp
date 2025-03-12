@@ -36,17 +36,31 @@
             <input type="submit" value="Sort by name <%= sortterm%>"/>
         </form>
 
+        <%
+            String searchTerm = "";
+            if (request.getAttribute("searchTerm") != null) {
+                searchTerm = (String) request.getAttribute("searchTerm");
+            }
+        %>
+        <form action="UserController">
+            <input type="hidden" name="action" value="searchName"/>
+            <input type="hidden" name="sortterm" value="<%= sortterm%>"/>
+            <input type="text" name="searchTerm" value="<%= searchTerm%>"/>
+            <input type="submit" value="Search"/>
+        </form>
+
+
         <br/>
 
         <%
             ArrayList<RestDTO> lrest;
             if (request.getAttribute("allrest") != null) {
                 lrest = (ArrayList<RestDTO>) request.getAttribute("allrest");
-                if(sortterm.equals("z-a")){
+                if (sortterm.equals("z-a")) {
                     Collections.sort(lrest);
                     Collections.reverse(lrest);
                 }
-                if(sortterm.equals("a-z")){
+                if (sortterm.equals("a-z")) {
                     Collections.sort(lrest);
                 }
                 for (int x = 0; x < lrest.size(); x++) {
