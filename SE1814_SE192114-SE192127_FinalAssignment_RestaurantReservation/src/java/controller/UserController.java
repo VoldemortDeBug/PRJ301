@@ -592,17 +592,6 @@ public class UserController extends HttpServlet {
         }
 
         try {
-            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
-            int restID = Integer.parseInt(request.getParameter("restID"));
-            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
-            if (rest != null) {
-                System.out.println("OWNER CHECKING HIS RESTAURANT");
-                request.setAttribute("owner", true);
-            }
-        } catch (Exception e) {
-        }
-
-        try {
             int restID = Integer.parseInt(request.getParameter("restID"));
             int entID = Integer.parseInt(request.getParameter("entID"));
             RestDTO rest = rdao.searchByID(restID);
