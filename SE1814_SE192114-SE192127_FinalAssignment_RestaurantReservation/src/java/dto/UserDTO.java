@@ -21,6 +21,7 @@ public class UserDTO {
     private String password;
     private int coins;
     private String profilepic;
+    private String type;
 
     public int getUserID() {
         return userID;
@@ -33,16 +34,15 @@ public class UserDTO {
     public UserDTO() {
     }
 
-    public UserDTO(String name, String email, String phone, String profilepic) {
+    public UserDTO(String name, String email, String phone, String profilepic, String type) {
         this.name = name;
         this.email = email;
         this.phone = phone;
         this.profilepic = profilepic;
+        this.type = type;
     }
-    
-    
 
-    public UserDTO(int userID, String name, String userName, String email, String phone, String password, int coins, String profilepic) {
+    public UserDTO(int userID, String name, String userName, String email, String phone, String password, int coins, String profilepic, String type) {
         this.userID = userID;
         this.name = name;
         this.userName = userName;
@@ -51,7 +51,17 @@ public class UserDTO {
         this.password = password;
         this.coins = coins;
         this.profilepic = profilepic;
+        this.type = type;
     }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+    
 
     public String getName() {
         return name;
@@ -111,7 +121,7 @@ public class UserDTO {
 
     @Override
     public String toString() {
-        return "UserDTO{" + "userID=" + userID + ", name=" + name + ", userName=" + userName + ", email=" + email + ", phone=" + phone + ", password=" + password + ", coins=" + coins + ", profilepic=" + profilepic + '}';
+        return "UserDTO{" + "userID=" + userID + ", name=" + name + ", userName=" + userName + ", email=" + email + ", phone=" + phone + ", password=" + password + ", coins=" + coins + ", profilepic=" + profilepic + ", type=" + type + '}';
     }
 
 }

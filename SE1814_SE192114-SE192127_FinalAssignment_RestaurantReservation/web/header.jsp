@@ -31,25 +31,34 @@
                 <input type="hidden" name="action" value="home"/>
                 <input type="submit" value="HOME"/>
             </form>
-            
+
+            <%if (user.getType().equals("User")) {%>
+
             <form action="UserController">
                 <input type="hidden" name="action" value="myReservations"/>
                 <input type="submit" value="My Reservations"/>
             </form>
+            <%}%>
+
+            <%if (user.getType().equals("Owner")) {%>
 
             <form action="UserController">
-                <input type="hidden" name="action" value="ownedRestList.jsp"/>
+                <input type="hidden" name="action" value="ownedRestList"/>
                 <input type="submit" value="OwnedRestaurants"/>
             </form>
-
+            <%}%>
 
             <a href="UserProfile.jsp"><img src="users/img/<%= user.getProfilepic()%>"  style="width: 40px; height: 40px; border-radius: 50%"/></a>
                 <% }%>
         </h1>
 
+        <%if(user.getType()!=null && !user.getType().equals("Guest")) {%>
         <form action="UserController">
             <input type="hidden" name="action" value="logout"/>
             <input type="submit" value="Logout"/>
         </form>
+        <%} else {%>    
+        <a href="Login.jsp"> <input type="button" value="Login"/> </a>
+        <%}%>
     </body>
 </html>

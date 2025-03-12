@@ -44,6 +44,7 @@
                 <td>Location</td>
                 <td>Tables/Rooms</td>
                 <td>Reservations</td>
+                <td>Total profit</td>
             </tr>
 
             <%
@@ -54,6 +55,7 @@
                 <td><%= i.getLoc()%></td>
                 <td><%= i.getEntites()%></td>
                 <td><%= i.getReservations() %></td>
+                <td><%= i.getProfit()%></td>
                 <td>
                     <form action="UserController" method="post">
                         <input type="hidden" name="action" value="restProfile"/>

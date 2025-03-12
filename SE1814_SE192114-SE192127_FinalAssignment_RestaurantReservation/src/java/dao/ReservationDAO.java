@@ -233,8 +233,8 @@ public class ReservationDAO implements IDAO<ReservationDTO, Integer> {
         return lresv;
     }
 
-    public boolean makeReservation(ReservationDTO entity, int totalFee) {
-        String sql = "{CALL MakeReservationAndPay(?, ?, ?, ?, ?, ?, ?)}";
+    public boolean makeReservation(ReservationDTO entity, int totalFee, int ownerID) {
+        String sql = "{CALL MakeReservationAndPay(?, ?, ?, ?, ?, ?, ?, ?)}";
         try {
             Connection conn = DBUtils.getConnection();
             CallableStatement stmt = conn.prepareCall(sql); // Use CallableStatement for stored procedures
@@ -246,6 +246,7 @@ public class ReservationDAO implements IDAO<ReservationDTO, Integer> {
             stmt.setDate(5, entity.getDate());
             stmt.setInt(6, entity.getSeats());
             stmt.setInt(7, totalFee);
+            stmt.setInt(8, ownerID);
 
             stmt.execute();
             return true;

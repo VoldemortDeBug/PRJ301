@@ -4,6 +4,8 @@
     Author     : Admin
 --%>
 
+<%@page import="java.util.Collections"%>
+<%@page import="java.util.ArrayList"%>
 <%@page import="dto.RestDTO"%>
 <%@page import="java.util.List"%>
 <%@page import="dto.UserDTO"%>
@@ -22,14 +24,36 @@
         <h1>welcome <%= user.getName()%></h1>
 
         <br/>
+        <%
+            String sortterm = "a-z";
+            if (request.getAttribute("sortterm") != null) {
+                sortterm = (String) request.getAttribute("sortterm");
+            }
+        %>
+        <form action="UserController">
+            <input type="hidden" name="action" value="sortHome"/>
+            <input type="hidden" name="sortterm" value="<%= sortterm%>"/>
+            <input type="submit" value="Sort by name <%= sortterm%>"/>
+        </form>
+
+        <br/>
 
         <%
-            List<RestDTO> lrest;
+            ArrayList<RestDTO> lrest;
             if (request.getAttribute("allrest") != null) {
-                lrest = (List<RestDTO>) request.getAttribute("allrest");
-                for (RestDTO i : lrest) {
+                lrest = (ArrayList<RestDTO>) request.getAttribute("allrest");
+                if(sortterm.equals("z-a")){
+                    Collections.sort(lrest);
+                    Collections.reverse(lrest);
+                }
+                if(sortterm.equals("a-z")){
+                    Collections.sort(lrest);
+                }
+                for (int x = 0; x < lrest.size(); x++) {
+                    RestDTO i = lrest.get(x);
         %>
-        <a href="UserController?action=clientRestProfile&restID=<%= i.getResID() %>"><img src="users/rimg/<%= (i.getMainPhoto()==null)?"Default.jpg":i.getMainPhoto() %>" /></a><br/>
+
+        <a href="UserController?action=clientRestProfile&restID=<%= i.getResID()%>"><img src="users/rimg/<%= (i.getMainPhoto() == null) ? "Default.jpg" : i.getMainPhoto()%>" /></a><br/>
         <span><%=i%></span>
         <br/>
         <br/>

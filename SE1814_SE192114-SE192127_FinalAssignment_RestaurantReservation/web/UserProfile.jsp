@@ -15,10 +15,11 @@
     <body>
         <%@include file="header.jsp" %>
 
+        <%if (!user.getType().equals("Guest")) {%>
         Name:  <%= user.getName()%><br/>
         Email:  <%= user.getEmail()%><br/>
         Phone: <%= user.getPhone()%><br/>
-        Coins: <%= user.getCoins() %><br/>
+        Coins: <%= user.getCoins()%><br/>
         <img src="users/img/<%= user.getProfilepic()%>"  style="width: 40px; height: 40px; border-radius: 50%"/>
 
         <h1>UPDATE PROFILE</h1>
@@ -39,7 +40,8 @@
             %>
             <span style="color: green"><%= message%></span>
         </form>
-
+        <%}%>
+        <%if (user.getType().equals("Owner")) {%>
 
         <h1>Add new restaurant</h1>
 
@@ -80,6 +82,8 @@
             %>
             <span style="color: green"><%= rMessage%></span>
         </form>
+
+        <% }%>
 
 
 

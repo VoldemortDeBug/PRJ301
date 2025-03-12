@@ -5,13 +5,13 @@
  */
 package dto;
 
-import java.util.List;
+import java.util.Objects;
 
 /**
  *
  * @author Admin
  */
-public class RestDTO {
+public class RestDTO implements Comparable<RestDTO>{
 
     private int restID;
     private String name;
@@ -20,13 +20,26 @@ public class RestDTO {
     private String mainPhoto = null;
     private int entites = 0;
     private int reservations = 0;
+    private int profit;
 
-    public RestDTO(int resID, String name, String loc, int OwnerID, String mainphoto) {
-        this.restID = resID;
+    public RestDTO() {
+    }
+
+    public RestDTO(int restID, String name, String loc, int OwnerID, String mainPhoto, int profit) {
+        this.restID = restID;
         this.name = name;
         this.loc = loc;
         this.OwnerID = OwnerID;
-        this.mainPhoto = mainphoto;
+        this.mainPhoto = mainPhoto;
+        this.profit = profit;
+    }
+
+    public int getProfit() {
+        return profit;
+    }
+
+    public void setProfit(int profit) {
+        this.profit = profit;
     }
 
     public int getEntites() {
@@ -43,9 +56,6 @@ public class RestDTO {
 
     public void setReservations(int reservations) {
         this.reservations = reservations;
-    }
-
-    public RestDTO() {
     }
 
     public String getMainPhoto() {
@@ -100,4 +110,10 @@ public class RestDTO {
     public String toString() {
         return "RestDTO{" + "restID=" + restID + ", name=" + name + ", loc=" + loc + ", OwnerID=" + OwnerID + ", mainPhoto=" + mainPhoto + '}';
     }
+
+    @Override
+    public int compareTo(RestDTO o) {
+        return this.name.compareTo(o.name);
+    }
+    
 }

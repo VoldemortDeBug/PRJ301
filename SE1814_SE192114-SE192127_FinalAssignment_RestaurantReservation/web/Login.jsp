@@ -29,16 +29,27 @@
                 </table>
                 <input type="submit" value="Login"/>
             </form>
-            <%                
+            <%
                 String ms = request.getAttribute("message") + "";
                 if (ms.equals("null")) {
                     ms = "";
                 }
             %>
             <div style="color: red"><%= ms%></div>
+            
+            
+            
+            <br/><br/>
 
-            <a href="Register.jsp"><input type="button" value="Register" /> </a>
 
+
+            <a href="Register.jsp"><input type="button" value="Register" /> </a><br/>
+            <a href="OwnerRegister.jsp"><input type="button" value="Owner register" /> </a> <br/>
+
+            <form action="UserController" method="post">
+                    <input type="hidden" name="action" value="guestLogin"/>
+                    <input type="submit" value="Guest Login"/>
+            </form> 
             <%@include file="footer.jsp"  %>
     </body>
 </html>

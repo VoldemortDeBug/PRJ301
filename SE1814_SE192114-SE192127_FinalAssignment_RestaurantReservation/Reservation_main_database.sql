@@ -15,7 +15,8 @@ CREATE TABLE Users (
     Phone VARCHAR(15),
     Password VARCHAR(100),
     Coins INT DEFAULT 0,
-    Profile_Picture VARCHAR(255)
+    Profile_Picture VARCHAR(255),
+	Type VARCHAR(5)
 );
 GO
 
@@ -26,6 +27,7 @@ CREATE TABLE Restaurants (
     Location VARCHAR(255),
     OwnerID INT,
     MainPhoto VARCHAR(255),
+	TotalProfit INT,
     FOREIGN KEY (OwnerID) REFERENCES Users(UserID)
 );
 GO
@@ -50,6 +52,7 @@ CREATE TABLE ReservedEntities (
     Daily INT,
     Weekly INT,
     ReservationFee INT,
+	TotalProfit INT,
     FOREIGN KEY (RestaurantID) REFERENCES Restaurants(RestaurantID)
 );
 GO

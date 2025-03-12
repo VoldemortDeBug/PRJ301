@@ -66,15 +66,11 @@
 
         <%
             if (request.getAttribute("rest") != null) {
-
-                boolean editmode = false;
                 RestDTO rest = (RestDTO) request.getAttribute("rest");
                 if (rest.getMainPhoto() == null) {
                     rest.setMainPhoto("Default.jpg");
                 }
-                if (request.getAttribute("edit") != null) {
-                    editmode = true;
-                }
+               
         %>
 
         <h1>Restaurant: <%= rest.getName()%></h1>
@@ -98,7 +94,7 @@
                 <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
                 <input type="hidden" name="photoID" value="<%= i.getPhotoID()%>"/>
 
-                <%if (editmode) {%>
+                <%if (user.getType().equals("Owner")) {%>
 
                 <button class="hover-btn"  type="submit">Delete</button>
                 <%}%>
@@ -108,7 +104,7 @@
         <%}%>
         <%}%>
 
-        <%if (editmode) {%>
+        <%if (user.getType().equals("Owner")) {%>
 
         <h1>Update main picture</h1>
 
@@ -140,7 +136,7 @@
         %>
 
         <span><%= i%>
-        <%if (editmode) {%>
+        <%if (user.getType().equals("Owner")) {%>
         <form method="post" action="UserController" >
             <input type="hidden" name="action" value="updateEntity"/>
             <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
@@ -154,22 +150,24 @@
             <input type="hidden" name="entID" value="<%= i.getEnID()%>"/>
             <input type="submit" value="Delete <%= i.getEnType()%>" />
         </form>
-        <% } else {%>
+        <% }%>
+        
+        <%if (!user.getType().equals("Guest")) {%>
         <form method="post" action="UserController" >
             <input type="hidden" name="action" value="reservePage"/>
             <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
             <input type="hidden" name="entID" value="<%= i.getEnID()%>"/>
             <input type="submit" value="<%= i.getEnType()%> details" />
         </form>
-        <%}%>
         </span>
         <br/><br/>
 
         <%}%>
         <%}%>
+        <%}%>
 
 
-        <%if (editmode) {%>
+        <%if (user.getType().equals("Owner")) {%>
         <h1>Add new table/room</h1>
 
         <%

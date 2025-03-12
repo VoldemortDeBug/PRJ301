@@ -11,13 +11,17 @@ import dto.ReservationDTO;
 import dto.RestDTO;
 import dto.UserDTO;
 import static java.lang.Math.abs;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
 
@@ -36,7 +40,6 @@ public class Utils {
     public static boolean validString(String s) {
         return (!s.equals("") && s.trim().length() > 0);
     }
-    
 
     public static Date xDaysFromy(int x, Date y) {
         LocalDate localDate = y.toLocalDate().plusDays(x);
@@ -117,8 +120,8 @@ public class Utils {
         }
         return -1;
     }
-    
-    public static int toWeekDay(Date d){
+
+    public static int toWeekDay(Date d) {
         LocalDate date = d.toLocalDate();
         DayOfWeek dow = date.getDayOfWeek();
         String weekday = dow.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
@@ -135,15 +138,38 @@ public class Utils {
         }
         return true;
     }
-    
-    public static int reservationAtTime(List<ReservationDTO> lresv ,int time, Date date) {
+
+    public static int reservationAtTime(List<ReservationDTO> lresv, int time, Date date) {
         //time = 0~23
-        for(ReservationDTO i:lresv){
-            if(i.getDate().equals(date) && Utils.hasbit(i.getHours(), PO2[time]) ){
+        for (ReservationDTO i : lresv) {
+            if (i.getDate().equals(date) && Utils.hasbit(i.getHours(), PO2[time])) {
                 return i.getRsvID();
             }
         }
         return -1;
     }
+    
+    // Encrypt the password
+   public static String encrypt(String password) {
+        int shift=10;
+        StringBuilder encrypted = new StringBuilder();
+        for (char ch : password.toCharArray()) {
+            // Shift the character and append to the result
+            char shiftedChar = (char) (ch + shift);
+            encrypted.append(shiftedChar);
+        }
+        return encrypted.toString();
+    }
 
+    // Method to decrypt the password by shifting characters back
+    public static String decrypt(String encryptedPassword) {
+        int shift=10;
+        StringBuilder decrypted = new StringBuilder();
+        for (char ch : encryptedPassword.toCharArray()) {
+            // Shift the character back and append to the result
+            char shiftedChar = (char) (ch - shift);
+            decrypted.append(shiftedChar);
+        }
+        return decrypted.toString();
+    }
 }

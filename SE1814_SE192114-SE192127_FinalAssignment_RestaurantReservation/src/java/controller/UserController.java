@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -61,10 +62,11 @@ public class UserController extends HttpServlet {
     public boolean isValidLogin(String usname, String passw) {
         dto.UserDTO user = udao.searchByUsername(usname);
         System.out.println(user);
+        System.out.println(passw + "hello" + Utils.encrypt(passw));
         if (user == null) {
             return false;
         }
-        if (user.getPassword().equals(passw)) {
+        if (passw.equals(Utils.decrypt(user.getPassword()))) {
             return true;
         }
         return false;
@@ -88,10 +90,17 @@ public class UserController extends HttpServlet {
         return url;
     }
 
+    private String processGuestLogin(HttpServletRequest request, HttpServletResponse response) {
+        String url = "Home.jsp";
+        //login action
+        UserDTO user = new UserDTO("GUEST", "", "", "default.jpg", "Guest");
+        request.getSession().setAttribute("user", user);
+        return url;
+    }
+
     private String processUpdateProfile(HttpServletRequest request, HttpServletResponse response) {
         String url = "UserProfile.jsp";
-        System.out.println(AuthenUtils.isUserLoggedIn(request.getSession()) + " is user logged in...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isLoggedIn(request.getSession())) {
             return "Home.jsp";
         }
         System.out.println("ur not going home");
@@ -168,7 +177,9 @@ public class UserController extends HttpServlet {
         } else {
             request.setAttribute("email", email);
         }
+
         if (checkError) {
+            request.setAttribute("error", true);
             return "Register.jsp";
         }
 
@@ -184,7 +195,9 @@ public class UserController extends HttpServlet {
             e.printStackTrace();
         }
 
-        UserDTO user = new UserDTO(newID, name, username, email, phone, password, 0, photoname);
+        String type = request.getParameter("type");
+
+        UserDTO user = new UserDTO(newID, name, username, email, phone, password, 0, photoname, type);
         System.out.println(user);
         udao.create(user);
         request.getSession().setAttribute("user", user);
@@ -194,8 +207,8 @@ public class UserController extends HttpServlet {
     private String processOwnedRestList(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestList.jsp";
         System.out.println("getting restaurant list in proccess...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
-            return "Login.jsp";
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
+            return "Home.jsp";
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
         Date currentSqlDate = new Date(System.currentTimeMillis());
@@ -220,7 +233,7 @@ public class UserController extends HttpServlet {
     private String processCreateRest(HttpServletRequest request, HttpServletResponse response) {
         String url = "UserProfile.jsp";
         System.out.println("creating restaurant list in proccess...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
@@ -241,7 +254,7 @@ public class UserController extends HttpServlet {
             return url = "UserProfile.jsp";
         }
 
-        RestDTO rest = new RestDTO(rdao.newID(), rname, rloc, user.getUserID(), null);
+        RestDTO rest = new RestDTO(rdao.newID(), rname, rloc, user.getUserID(), null, 0);
 
         try {
             rdao.create(rest);
@@ -254,9 +267,9 @@ public class UserController extends HttpServlet {
         return url;
     }
 
-    private String processRestProfile(HttpServletRequest request, HttpServletResponse response) {
+    private String processOwnerRestProfile(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
@@ -269,16 +282,15 @@ public class UserController extends HttpServlet {
             request.setAttribute("lent", lent);
             request.setAttribute("lphoto", lphoto);
             request.setAttribute("rest", rest);
-            request.setAttribute("edit", true);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return url;
     }
 
-    private String processClientRestProfile(HttpServletRequest request, HttpServletResponse response) {
+    private String processRestProfile(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
             return "Login.jsp";
         }
 
@@ -308,7 +320,7 @@ public class UserController extends HttpServlet {
     private String processAddRestPhoto(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
         System.out.println("adding restaurant photo ...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
@@ -328,7 +340,7 @@ public class UserController extends HttpServlet {
                 e.printStackTrace();
             }
 
-            processRestProfile(request, response);
+            processOwnerRestProfile(request, response);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -338,7 +350,7 @@ public class UserController extends HttpServlet {
     private String processUpdateMainPhoto(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
         System.out.println("updating main restaurant photo ...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
@@ -361,7 +373,7 @@ public class UserController extends HttpServlet {
                 rdao.updateMainPhoto(restID, photoname);
             }
 
-            processRestProfile(request, response);
+            processOwnerRestProfile(request, response);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -371,7 +383,7 @@ public class UserController extends HttpServlet {
     private String processDelRestPhoto(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
         System.out.println("deleting restaurant photo ...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
         int photoID = Integer.parseInt(request.getParameter("photoID"));
@@ -387,14 +399,14 @@ public class UserController extends HttpServlet {
             e.printStackTrace();
         }
 
-        processRestProfile(request, response);
+        processOwnerRestProfile(request, response);
         return url;
     }
 
     private String processCreateEntity(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
         System.out.println("Creating new entity ...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
         System.out.println("hello");
@@ -478,13 +490,13 @@ public class UserController extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        processRestProfile(request, response);
+        processOwnerRestProfile(request, response);
         return url;
     }
 
     private void processUpdateEntity(HttpServletRequest request, HttpServletResponse response) {
         System.out.println("changing entity active date ...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
             return;
         }
         Date newEdate = null;
@@ -515,7 +527,7 @@ public class UserController extends HttpServlet {
 
     private void processDeleteEntity(HttpServletRequest request, HttpServletResponse response) {
         System.out.println("changing entity active date ...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
             return;
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
@@ -550,8 +562,23 @@ public class UserController extends HttpServlet {
     private String processHome(HttpServletRequest request, HttpServletResponse response) {
         String url = "Home.jsp";
         System.out.println("Entering home...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
             return "Login.jsp";
+        }
+        request.setAttribute("allrest", rdao.readAll());
+        return url;
+    }
+
+    private String processSortHome(HttpServletRequest request, HttpServletResponse response) {
+        String url = "Home.jsp";
+        System.out.println("Entering home...");
+        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
+            return "Login.jsp";
+        }
+        if (request.getParameter("sortterm").equals("a-z")) {
+            request.setAttribute("sortterm", "z-a");
+        }else{
+            request.setAttribute("sortterm", "a-z");
         }
         request.setAttribute("allrest", rdao.readAll());
         return url;
@@ -560,7 +587,7 @@ public class UserController extends HttpServlet {
     private String processReservePage(HttpServletRequest request, HttpServletResponse response) {
         String url = "Reserve.jsp";
         System.out.println("Going to reserve page...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
 
@@ -692,17 +719,6 @@ public class UserController extends HttpServlet {
         try {
             UserDTO user = (UserDTO) request.getSession().getAttribute("user");
             int restID = Integer.parseInt(request.getParameter("restID"));
-            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID());
-            if (rest != null) {
-                System.out.println("YOU CANNOT RESERVE IN YOUR OWN RESTAURANT");
-                return processReservePage(request, response);
-            }
-        } catch (Exception e) {
-        }
-
-        try {
-            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
-            int restID = Integer.parseInt(request.getParameter("restID"));
             int entID = Integer.parseInt(request.getParameter("entID"));
             RestDTO rest = rdao.searchByID(restID);
             REntityDTO rent = edao.searchByID(entID);
@@ -742,7 +758,7 @@ public class UserController extends HttpServlet {
             }
 
             ReservationDTO reservation = new ReservationDTO(rsvdao.newID(), user.getUserID(), rent.getEnID(), rDaily, rDate, rSeat);
-            rsvdao.makeReservation(reservation, rent.getEnFee() * Integer.bitCount(rDaily));
+            rsvdao.makeReservation(reservation, rent.getEnFee() * Integer.bitCount(rDaily), rest.getOwnerID());
 
             System.out.println("Sucessfully making reservation");
             userFromDatabase = udao.searchByUsername(user.getUserName());
@@ -798,7 +814,7 @@ public class UserController extends HttpServlet {
     private String processDeleteRestaurant(HttpServletRequest request, HttpServletResponse response) {
         String url = LOGIN_PAGE;
         System.out.println("Checking my reservationss...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
         try {
@@ -824,9 +840,9 @@ public class UserController extends HttpServlet {
 
     private String processCheckReservation(HttpServletRequest request, HttpServletResponse response) {
         String url = "ReservationDetail.jsp";
-        
+
         System.out.println("checking reservation...");
-        if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
+        if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
             return "Login.jsp";
         }
 
@@ -842,7 +858,7 @@ public class UserController extends HttpServlet {
                 request.setAttribute("rest", rest);
                 request.setAttribute("rent", rent);
                 request.setAttribute("rsvUser", rsvUser);
-                
+
             }
         } catch (Exception e) {
         }
@@ -863,6 +879,9 @@ public class UserController extends HttpServlet {
             if (action != null && action.equals("login")) {
                 url = processLogin(request, response);
             }
+            if (action != null && action.equals("guestLogin")) {
+                url = processGuestLogin(request, response);
+            }
             if (action != null && action.equals("logout")) {
                 url = LOGIN_PAGE;
                 request.getSession().invalidate();
@@ -873,14 +892,14 @@ public class UserController extends HttpServlet {
             if (action != null && action.equals("updateProfile")) {
                 url = processUpdateProfile(request, response);
             }
-            if (action != null && action.equals("ownedRestList.jsp")) {
+            if (action != null && action.equals("ownedRestList")) {
                 url = processOwnedRestList(request, response);
             }
             if (action != null && action.equals("createRest")) {
                 url = processCreateRest(request, response);
             }
             if (action != null && action.equals("restProfile")) {
-                url = processRestProfile(request, response);
+                url = processOwnerRestProfile(request, response);
             }
             if (action != null && action.equals("addRestPic")) {
                 url = processAddRestPhoto(request, response);
@@ -896,17 +915,17 @@ public class UserController extends HttpServlet {
             }
             if (action != null && action.equals("updateEntity")) {
                 processUpdateEntity(request, response);
-                url = processRestProfile(request, response);
+                url = processOwnerRestProfile(request, response);
             }
             if (action != null && action.equals("deleteEntity")) {
                 processDeleteEntity(request, response);
-                url = processRestProfile(request, response);
+                url = processOwnerRestProfile(request, response);
             }
             if (action != null && action.equals("home")) {
                 url = processHome(request, response);
             }
             if (action != null && action.equals("clientRestProfile")) {
-                url = processClientRestProfile(request, response);
+                url = processRestProfile(request, response);
             }
             if (action != null && action.equals("reservePage")) {
                 url = processReservePage(request, response);
@@ -928,6 +947,9 @@ public class UserController extends HttpServlet {
             }
             if (action != null && action.equals("checkReservation")) {
                 url = processCheckReservation(request, response);
+            }
+            if (action != null && action.equals("sortHome")) {
+                url = processSortHome(request, response);
             }
 
             if (url.equals("Home.jsp")) {

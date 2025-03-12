@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import util.DBUtils;
+import util.Utils;
 
 /**
  *
@@ -46,8 +47,8 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
 
     @Override
     public boolean create(UserDTO entity) {
-        String sql = "INSERT INTO [Users] ([UserID], [Name], [Username], [Email], [Phone], [Password], [Coins], [Profile_Picture])"
-                + " VALUES (?, ?, ?, ?, ?, ?, ?, ? )";
+        String sql = "INSERT INTO [Users] ([UserID], [Name], [Username], [Email], [Phone], [Password], [Coins], [Profile_Picture], [Type])"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? )";
 
         try {
             Connection conn = DBUtils.getConnection();
@@ -57,9 +58,12 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
             ps.setString(3, entity.getUserName());
             ps.setString(4, entity.getEmail());
             ps.setString(5, entity.getPhone());
-            ps.setString(6, entity.getPassword());
+            ps.setString(6, Utils.encrypt(entity.getPassword()));
+            System.out.println("encrypt="+Utils.encrypt(entity.getPassword())+" and decrypt = "+Utils.decrypt(Utils.encrypt(entity.getPassword())));
+
             ps.setInt(7, entity.getCoins());
             ps.setString(8, entity.getProfilepic());
+            ps.setString(9, entity.getType());
             int n = ps.executeUpdate();
             return n > 0;
         } catch (ClassNotFoundException ex) {
@@ -88,7 +92,9 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
                         rs.getString("Phone"),
                         rs.getString("Password"),
                         rs.getInt("Coins"),
-                        rs.getString("Profile_Picture"));
+                        rs.getString("Profile_Picture"),
+                        rs.getString("Type")
+                );
                 list.add(user);
             }
         } catch (ClassNotFoundException | SQLException ex) {
@@ -99,7 +105,7 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
 
     @Override
     public boolean update(UserDTO entity) {
-        System.out.println("Updating for user...new data: "+entity);
+        System.out.println("Updating for user...new data: " + entity);
         String sql = "   UPDATE [Users]  SET [Name] = ?, [Email] =?, [Phone] =? ,[Profile_Picture]=? WHERE [UserID] = ?;";
         try {
             Connection conn = DBUtils.getConnection();
@@ -132,17 +138,19 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 UserDTO user = new UserDTO(
-                        rs.getString("Name"), 
-                        rs.getString("Email"), 
+                        rs.getString("Name"),
+                        rs.getString("Email"),
                         rs.getString("Phone"),
-                        rs.getString("Profile_Picture")
+                        rs.getString("Profile_Picture"),
+                        rs.getString("Type")
                 );
                 return user;
             }
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return null;    }
+        return null;
+    }
 
     @Override
     public boolean delete(Integer id) {
@@ -165,12 +173,18 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
                         rs.getString("Phone"),
                         rs.getString("Password"),
                         rs.getInt("Coins"),
-                        rs.getString("Profile_Picture"));
+                        rs.getString("Profile_Picture"),
+                        rs.getString("Type")
+                );
                 return user;
             }
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return null;
+    }
+
+    public UserDTO searchByEntityID(Integer entID) {
         return null;
     }
 

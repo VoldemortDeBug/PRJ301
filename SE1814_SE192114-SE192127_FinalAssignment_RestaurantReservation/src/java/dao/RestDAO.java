@@ -85,7 +85,8 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
                         rs.getString("Name"),
                         rs.getString("Location"),
                         rs.getInt("OwnerID"),
-                        rs.getString("MainPhoto")
+                        rs.getString("MainPhoto"),
+                        rs.getInt("TotalProfit")
                 );
                 lrest.add(rest);
             }
@@ -110,7 +111,8 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
                         rs.getString("Name"),
                         rs.getString("Location"),
                         rs.getInt("OwnerID"),
-                        rs.getString("MainPhoto")
+                        rs.getString("MainPhoto"),
+                        rs.getInt("TotalProfit")
                 );
                 return rest;
             }
@@ -162,7 +164,8 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
                         rs.getString("Name"),
                         rs.getString("Location"),
                         rs.getInt("OwnerID"),
-                        rs.getString("MainPhoto")
+                        rs.getString("MainPhoto"),
+                        rs.getInt("TotalProfit")
                 );
                 lrest.add(rest);
             }
@@ -186,7 +189,8 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
                         rs.getString("Name"),
                         rs.getString("Location"),
                         rs.getInt("OwnerID"),
-                        rs.getString("MainPhoto")
+                        rs.getString("MainPhoto"),
+                        rs.getInt("TotalProfit")
                 );
                 return rest;
             }
