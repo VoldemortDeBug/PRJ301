@@ -109,14 +109,10 @@ public class UserController extends HttpServlet {
         if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
             return "Login.jsp";
         }
-        String sortterm = request.getParameter("sortterm");
         String searchTerm = request.getParameter("searchTerm");
         List<RestDTO> lrest = rdao.searchByName(searchTerm);
         request.setAttribute("allrest", lrest);
-        request.setAttribute("sortterm", sortterm);
         request.setAttribute("searchTerm", searchTerm);
-        System.out.println("searching for " + searchTerm+" sort "+sortterm);
-        System.out.println(lrest);
         return url;
     }
 
