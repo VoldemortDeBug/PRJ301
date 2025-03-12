@@ -72,7 +72,12 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
 
     @Override
     public List<RestDTO> readAll() {
-        String sql = "SELECT * FROM [Restaurants]  ";
+        String sql = "SELECT r.* FROM [Restaurants] r  " 
+                + "JOIN ReservedEntities re "
+                + "ON r.RestaurantID = re.RestaurantID "
+                + "WHERE re.ActiveTill > GETDATE() "
+                + "GROUP BY r.RestaurantID, r.Name, r.Location, r.OwnerID, r.MainPhoto, r.TotalProfit "
+                + "HAVING COUNT(re.EntityID) > 0";
         List<RestDTO> lrest = new ArrayList<>();
         try {
             Connection conn = DBUtils.getConnection();
@@ -215,20 +220,20 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
         return false;
     }
 
-    public List<RestDTO> searchByName(String rname) {
-        List<RestDTO> lrest = new ArrayList<>();
-        String sql = "SELECT r.* "
-                + "FROM Restaurants r "
-                + "JOIN ReservedEntities re ON r.RestaurantID = re.RestaurantID "
-                + "WHERE r.Name = ? "
+    public List<RestDTO> searchByName(String s) {
+        String sql = "SELECT r.* FROM [Restaurants]  r  "
+                + "JOIN ReservedEntities re "
+                + "ON r.RestaurantID = re.RestaurantID "
+                + "WHERE NAME LIKE ?  "
+                + "AND re.ActiveTill > GETDATE()"
                 + "GROUP BY r.RestaurantID, r.Name, r.Location, r.OwnerID, r.MainPhoto, r.TotalProfit "
-                + "HAVING COUNT(re.EntityID) > 0; ";
-
+                + "HAVING COUNT(re.EntityID) > 0";
+        List<RestDTO> lrest = new ArrayList<>();
         try {
             Connection conn = DBUtils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, "%" + rname + "%");
-            System.out.println("searching by title " + rname);
+            ps.setString(1, "%" + s + "%");
+
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 RestDTO rest = new RestDTO(
@@ -242,8 +247,8 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
                 lrest.add(rest);
             }
             return lrest;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }

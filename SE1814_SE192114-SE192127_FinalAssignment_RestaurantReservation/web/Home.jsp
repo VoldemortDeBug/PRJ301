@@ -43,8 +43,7 @@
             }
         %>
         <form action="UserController">
-            <input type="hidden" name="action" value="searchName"/>
-            <input type="hidden" name="sortterm" value="<%= sortterm%>"/>
+            <input type="hidden" name="action" value="searchByName"/>
             <input type="text" name="searchTerm" value="<%= searchTerm%>"/>
             <input type="submit" value="Search"/>
         </form>
@@ -56,17 +55,9 @@
             ArrayList<RestDTO> lrest;
             if (request.getAttribute("allrest") != null) {
                 lrest = (ArrayList<RestDTO>) request.getAttribute("allrest");
-                if (sortterm.equals("z-a")) {
-                    Collections.sort(lrest);
-                    Collections.reverse(lrest);
-                }
-                if (sortterm.equals("a-z")) {
-                    Collections.sort(lrest);
-                }
                 for (int x = 0; x < lrest.size(); x++) {
                     RestDTO i = lrest.get(x);
         %>
-
         <a href="UserController?action=clientRestProfile&restID=<%= i.getResID()%>"><img src="users/rimg/<%= (i.getMainPhoto() == null) ? "Default.jpg" : i.getMainPhoto()%>" /></a><br/>
         <span><%=i%></span>
         <br/>

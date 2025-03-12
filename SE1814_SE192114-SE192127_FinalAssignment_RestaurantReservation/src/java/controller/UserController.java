@@ -72,6 +72,54 @@ public class UserController extends HttpServlet {
         return false;
     }
 
+    private String processHome(HttpServletRequest request, HttpServletResponse response) {
+        String url = "Home.jsp";
+        System.out.println("Entering home...");
+        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
+            return "Login.jsp";
+        }
+        request.setAttribute("allrest", rdao.readAll());
+        return url;
+    }
+
+    private String processSortHome(HttpServletRequest request, HttpServletResponse response) {
+        String url = "Home.jsp";
+        System.out.println("Entering home...");
+        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
+            return "Login.jsp";
+        }
+        List<RestDTO> lrest = rdao.readAll();
+        if (request.getParameter("sortterm").equals("a-z")) {
+            System.out.println("sort az");
+            request.setAttribute("sortterm", "z-a");
+            Collections.sort(lrest);
+        } else {
+            System.out.println("sort za");
+            request.setAttribute("sortterm", "a-z");
+            Collections.sort(lrest);
+            Collections.reverse(lrest);
+        }
+        System.out.println(lrest);
+        request.setAttribute("allrest",lrest);
+        return url;
+    }
+
+    private String processSearchByName(HttpServletRequest request, HttpServletResponse response) {
+        String url = "Home.jsp";
+        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
+            return "Login.jsp";
+        }
+        String sortterm = request.getParameter("sortterm");
+        String searchTerm = request.getParameter("searchTerm");
+        List<RestDTO> lrest = rdao.searchByName(searchTerm);
+        request.setAttribute("allrest", lrest);
+        request.setAttribute("sortterm", sortterm);
+        request.setAttribute("searchTerm", searchTerm);
+        System.out.println("searching for " + searchTerm+" sort "+sortterm);
+        System.out.println(lrest);
+        return url;
+    }
+
     private String processLogin(HttpServletRequest request, HttpServletResponse response) {
         String url = LOGIN_PAGE;
         //login action
@@ -85,9 +133,9 @@ public class UserController extends HttpServlet {
             System.out.println(user);
         } else {
             request.setAttribute("message", "Login failed. Incorrect Username or Password.");
-            url = LOGIN_PAGE;
+            return LOGIN_PAGE;
         }
-        return url;
+        return processHome(request, response);
     }
 
     private String processGuestLogin(HttpServletRequest request, HttpServletResponse response) {
@@ -95,13 +143,13 @@ public class UserController extends HttpServlet {
         //login action
         UserDTO user = new UserDTO("GUEST", "", "", "default.jpg", "Guest");
         request.getSession().setAttribute("user", user);
-        return url;
+        return processHome(request, response);
     }
 
     private String processUpdateProfile(HttpServletRequest request, HttpServletResponse response) {
         String url = "UserProfile.jsp";
         if (!AuthenUtils.isLoggedIn(request.getSession())) {
-            return "Home.jsp";
+            return LOGIN_PAGE;
         }
         System.out.println("ur not going home");
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
@@ -201,14 +249,14 @@ public class UserController extends HttpServlet {
         System.out.println(user);
         udao.create(user);
         request.getSession().setAttribute("user", user);
-        return url;
+        return processHome(request, response);
     }
 
     private String processOwnedRestList(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestList.jsp";
         System.out.println("getting restaurant list in proccess...");
         if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
-            return "Home.jsp";
+            return LOGIN_PAGE;
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
         Date currentSqlDate = new Date(System.currentTimeMillis());
@@ -234,7 +282,7 @@ public class UserController extends HttpServlet {
         String url = "UserProfile.jsp";
         System.out.println("creating restaurant list in proccess...");
         if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
         String rname = request.getParameter("rname");
@@ -270,7 +318,7 @@ public class UserController extends HttpServlet {
     private String processOwnerRestProfile(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
         if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
         int restID = Integer.parseInt(request.getParameter("restID"));
@@ -291,7 +339,7 @@ public class UserController extends HttpServlet {
     private String processRestProfile(HttpServletRequest request, HttpServletResponse response) {
         String url = "RestaurantProfile.jsp";
         if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
 
         int restID = Integer.parseInt(request.getParameter("restID"));
@@ -321,7 +369,7 @@ public class UserController extends HttpServlet {
         String url = "RestaurantProfile.jsp";
         System.out.println("adding restaurant photo ...");
         if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
         int restID = Integer.parseInt(request.getParameter("restID"));
@@ -351,7 +399,7 @@ public class UserController extends HttpServlet {
         String url = "RestaurantProfile.jsp";
         System.out.println("updating main restaurant photo ...");
         if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
         int restID = Integer.parseInt(request.getParameter("restID"));
@@ -384,7 +432,7 @@ public class UserController extends HttpServlet {
         String url = "RestaurantProfile.jsp";
         System.out.println("deleting restaurant photo ...");
         if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
         int photoID = Integer.parseInt(request.getParameter("photoID"));
         int restID = Integer.parseInt(request.getParameter("restID"));
@@ -407,7 +455,7 @@ public class UserController extends HttpServlet {
         String url = "RestaurantProfile.jsp";
         System.out.println("Creating new entity ...");
         if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
         System.out.println("hello");
         UserDTO user = (UserDTO) request.getSession().getAttribute("user");
@@ -559,50 +607,11 @@ public class UserController extends HttpServlet {
         return;
     }
 
-    private String processHome(HttpServletRequest request, HttpServletResponse response) {
-        String url = "Home.jsp";
-        System.out.println("Entering home...");
-        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
-            return "Login.jsp";
-        }
-        request.setAttribute("allrest", rdao.readAll());
-        return url;
-    }
-
-    private String processSortHome(HttpServletRequest request, HttpServletResponse response) {
-        String url = "Home.jsp";
-        System.out.println("Entering home...");
-        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
-            return "Login.jsp";
-        }
-        if (request.getParameter("sortterm").equals("a-z")) {
-            request.setAttribute("sortterm", "z-a");
-        } else {
-            request.setAttribute("sortterm", "a-z");
-        }
-        request.setAttribute("allrest", rdao.readAll());
-        return url;
-    }
-
-    private String processSearchName(HttpServletRequest request, HttpServletResponse response) {
-        String url = "Home.jsp";
-        System.out.println("Entering home...");
-        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
-            return "Login.jsp";
-        }
-
-        String sortterm = request.getParameter("sortterm");
-        String searchName = request.getParameter("searchName");
-        request.setAttribute("sortterm", sortterm);
-        request.setAttribute("allrest", rdao.searchByName(searchName));
-        return url;
-    }
-
     private String processReservePage(HttpServletRequest request, HttpServletResponse response) {
         String url = "Reserve.jsp";
         System.out.println("Going to reserve page...");
         if (!AuthenUtils.isLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
 
         try {
@@ -641,7 +650,7 @@ public class UserController extends HttpServlet {
     private String processMakeReservation(HttpServletRequest request, HttpServletResponse response) {
         System.out.println("Making reservation...");
         if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
         try {
             UserDTO user = (UserDTO) request.getSession().getAttribute("user");
@@ -716,7 +725,7 @@ public class UserController extends HttpServlet {
 
         System.out.println("Confirming reservation...");
         if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
 
         try {
@@ -779,7 +788,7 @@ public class UserController extends HttpServlet {
         String url = "UserReservations.jsp";
         System.out.println("Checking my reservationss...");
         if (!AuthenUtils.isUserLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
         try {
 
@@ -846,7 +855,7 @@ public class UserController extends HttpServlet {
 
         System.out.println("checking reservation...");
         if (!AuthenUtils.isOwnerLoggedIn(request.getSession())) {
-            return "Login.jsp";
+            return LOGIN_PAGE;
         }
 
         try {
@@ -954,13 +963,13 @@ public class UserController extends HttpServlet {
             if (action != null && action.equals("sortHome")) {
                 url = processSortHome(request, response);
             }
-            if (action != null && action.equals("searchName")) {
-                url = processSearchName(request, response);
+            if (action != null && action.equals("searchByName")) {
+                url = processSearchByName(request, response);
             }
 
-            if (url.equals("Home.jsp")) {
-                url = processHome(request, response);
-            }
+//            if (url.equals("Home.jsp")) {
+//                url = processHome(request, response);
+//            }
         } catch (Exception e) {
             log("Error at MainController: " + e.toString());
         } finally {
