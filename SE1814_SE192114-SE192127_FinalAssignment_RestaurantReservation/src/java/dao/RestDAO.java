@@ -72,7 +72,7 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
 
     @Override
     public List<RestDTO> readAll() {
-        String sql = "SELECT r.* FROM [Restaurants] r  " 
+        String sql = "SELECT r.* FROM [Restaurants] r  "
                 + "JOIN ReservedEntities re "
                 + "ON r.RestaurantID = re.RestaurantID "
                 + "WHERE re.ActiveTill > GETDATE() "
@@ -233,6 +233,86 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
             Connection conn = DBUtils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, "%" + s + "%");
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                RestDTO rest = new RestDTO(
+                        rs.getInt("RestaurantID"),
+                        rs.getString("Name"),
+                        rs.getString("Location"),
+                        rs.getInt("OwnerID"),
+                        rs.getString("MainPhoto"),
+                        rs.getInt("TotalProfit")
+                );
+                lrest.add(rest);
+            }
+            return lrest;
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    public List<RestDTO> searchByName(String s, int page, int amount) {
+        String sql = "SELECT * "
+                + "FROM (				"
+                + "	SELECT r.* FROM [Restaurants]  r  "
+                + "	JOIN ReservedEntities re "
+                + "	ON r.RestaurantID = re.RestaurantID "
+                + "	WHERE r.Name LIKE ? "
+                + "	AND re.ActiveTill > GETDATE() "
+                + "	GROUP BY r.RestaurantID, r.Name, r.Location, r.OwnerID, r.MainPhoto, r.TotalProfit "
+                + "	HAVING COUNT(re.EntityID) > 0 "
+                + ") as r "
+                + "ORDER BY r.RestaurantID "
+                + "OFFSET ? ROWS "
+                + "FETCH NEXT ? ROWS ONLY";
+        List<RestDTO> lrest = new ArrayList<>();
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, "%" + s + "%");
+            ps.setInt(2, (page - 1) * amount);
+            ps.setInt(3, amount);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                RestDTO rest = new RestDTO(
+                        rs.getInt("RestaurantID"),
+                        rs.getString("Name"),
+                        rs.getString("Location"),
+                        rs.getInt("OwnerID"),
+                        rs.getString("MainPhoto"),
+                        rs.getInt("TotalProfit")
+                );
+                lrest.add(rest);
+            }
+            return lrest;
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(RestDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    public List<RestDTO> pageRest(int page, int amount) {
+        String sql = "SELECT * "
+                + "FROM (				"
+                + "	SELECT r.* FROM [Restaurants]  r  "
+                + "	JOIN ReservedEntities re "
+                + "	ON r.RestaurantID = re.RestaurantID "
+                + "	WHERE re.ActiveTill > GETDATE() "
+                + "	GROUP BY r.RestaurantID, r.Name, r.Location, r.OwnerID, r.MainPhoto, r.TotalProfit "
+                + "	HAVING COUNT(re.EntityID) > 0 "
+                + ") as r "
+                + "ORDER BY r.RestaurantID "
+                + "OFFSET ? ROWS "
+                + "FETCH NEXT ? ROWS ONLY";
+        List<RestDTO> lrest = new ArrayList<>();
+        try {
+            Connection conn = DBUtils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, (page - 1) * amount);
+            ps.setInt(2, amount);
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {

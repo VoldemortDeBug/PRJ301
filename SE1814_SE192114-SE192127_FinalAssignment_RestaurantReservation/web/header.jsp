@@ -20,7 +20,10 @@
                 user = (UserDTO) request.getSession().getAttribute("user");
             }
 
-
+            String searchTerm = "";
+            if (request.getAttribute("searchTerm") != null) {
+                searchTerm = (String) request.getAttribute("searchTerm");
+            }
         %>
 
         <h1>
@@ -31,6 +34,14 @@
                 <input type="hidden" name="action" value="home"/>
                 <input type="submit" value="HOME"/>
             </form>
+
+            <form action="UserController">
+                <input type="hidden" name="action" value="home"/>
+                <input type="text" name="searchTerm" value="<%= searchTerm%>"/>
+                <input type="submit" value="Search"/>
+            </form>
+
+
 
             <%if (user.getType().equals("User")) {%>
 
@@ -52,13 +63,13 @@
                 <% }%>
         </h1>
 
-        <%if(user.getType()!=null && !user.getType().equals("Guest")) {%>
+        <%if (user.getType() != null && !user.getType().equals("Guest")) {%>
         <form action="UserController">
             <input type="hidden" name="action" value="logout"/>
             <input type="submit" value="Logout"/>
         </form>
         <%} else {%>    
         <a href="Login.jsp"> <input type="button" value="Login"/> </a>
-        <%}%>
+            <%}%>
     </body>
 </html>

@@ -25,30 +25,24 @@
 
         <br/>
         <%
-            String sortterm = "a-z";
-            if (request.getAttribute("sortterm") != null) {
-                sortterm = (String) request.getAttribute("sortterm");
+            int hpage =1;
+            if (request.getAttribute("hpage") != null) {
+                hpage = (int) request.getAttribute("hpage");
             }
         %>
         <form action="UserController">
-            <input type="hidden" name="action" value="sortHome"/>
-            <input type="hidden" name="sortterm" value="<%= sortterm%>"/>
-            <input type="submit" value="Sort by name <%= sortterm%>"/>
+            <input type="hidden" name="action" value="home"/>
+            <input type="hidden" name="searchTerm" value="<%= searchTerm %>"/>
+            <input type="hidden" name="hpage" value="<%= hpage-1 %>"/>
+            <input type="submit" value="<--"/>
         </form>
-
-        <%
-            String searchTerm = "";
-            if (request.getAttribute("searchTerm") != null) {
-                searchTerm = (String) request.getAttribute("searchTerm");
-            }
-        %>
         <form action="UserController">
-            <input type="hidden" name="action" value="searchByName"/>
-            <input type="text" name="searchTerm" value="<%= searchTerm%>"/>
-            <input type="submit" value="Search"/>
+            <input type="hidden" name="action" value="home"/>
+            <input type="hidden" name="searchTerm" value="<%= searchTerm %>"/>
+            <input type="hidden" name="hpage" value="<%= hpage+1 %>"/>
+            <input type="submit" value="-->"/>
         </form>
-
-
+  
         <br/>
 
         <%

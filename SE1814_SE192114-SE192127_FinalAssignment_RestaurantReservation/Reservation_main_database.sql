@@ -53,6 +53,7 @@ CREATE TABLE ReservedEntities (
     Weekly INT,
     ReservationFee INT,
 	TotalProfit INT,
+	Name VARCHAR(100)
     FOREIGN KEY (RestaurantID) REFERENCES Restaurants(RestaurantID)
 );
 GO

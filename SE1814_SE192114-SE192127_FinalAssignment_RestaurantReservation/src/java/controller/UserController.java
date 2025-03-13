@@ -48,6 +48,7 @@ public class UserController extends HttpServlet {
     private static final String LOGIN_PAGE = "Login.jsp";
     private static final String USER_IMG_FOLDER = "D:\\FPTK19\\PRJ\\PRJ301\\SE1814_SE192114-SE192127_FinalAssignment_RestaurantReservation\\web\\users\\img\\";
     private static final String REST_IMG_FOLDER = "D:\\FPTK19\\PRJ\\PRJ301\\SE1814_SE192114-SE192127_FinalAssignment_RestaurantReservation\\web\\users\\rimg\\";
+    private static final int AMOUNT_PER_PAGE =5;
     private UserDAO udao = new UserDAO();
     private RestDAO rdao = new RestDAO();
     private RestPhotoDAO rpdao = new RestPhotoDAO();
@@ -78,44 +79,26 @@ public class UserController extends HttpServlet {
         if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
             return "Login.jsp";
         }
-        request.setAttribute("allrest", rdao.readAll());
-        return url;
-    }
-
-    private String processSortHome(HttpServletRequest request, HttpServletResponse response) {
-        String url = "Home.jsp";
-        System.out.println("Entering home...");
-        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
-            return "Login.jsp";
+        int hpage =1;
+        if(request.getParameter("hpage")!=null){
+            hpage=Integer.parseInt(request.getParameter("hpage"));
         }
-        List<RestDTO> lrest = rdao.readAll();
-        if (request.getParameter("sortterm").equals("a-z")) {
-            System.out.println("sort az");
-            request.setAttribute("sortterm", "z-a");
-            Collections.sort(lrest);
-        } else {
-            System.out.println("sort za");
-            request.setAttribute("sortterm", "a-z");
-            Collections.sort(lrest);
-            Collections.reverse(lrest);
+        if(hpage<=0){
+            hpage=1;
         }
-        System.out.println(lrest);
-        request.setAttribute("allrest", lrest);
-        return url;
-    }
-
-    private String processSearchByName(HttpServletRequest request, HttpServletResponse response) {
-        String url = "Home.jsp";
-        if (!AuthenUtils.isGuestOrAbove(request.getSession())) {
-            return "Login.jsp";
+        
+        String searchTerm ="";
+        if(request.getParameter("searchTerm")!=null){
+            searchTerm=request.getParameter("searchTerm");
         }
-        String searchTerm = request.getParameter("searchTerm");
-        System.out.println("searchTerm = " + searchTerm);
-        List<RestDTO> lrest = rdao.searchByName(searchTerm);
-        request.setAttribute("allrest", lrest);
+        System.out.println("search "+searchTerm+" page "+hpage);
+        List<RestDTO> lrest = rdao.searchByName(searchTerm, hpage, AMOUNT_PER_PAGE);
+        request.setAttribute("hpage", hpage);
         request.setAttribute("searchTerm", searchTerm);
+        request.setAttribute("allrest", lrest);
         return url;
     }
+
 
     private String processLogin(HttpServletRequest request, HttpServletResponse response) {
         String url = LOGIN_PAGE;
@@ -974,12 +957,7 @@ public class UserController extends HttpServlet {
             if (action != null && action.equals("checkReservation")) {
                 url = processCheckReservation(request, response);
             }
-            if (action != null && action.equals("sortHome")) {
-                url = processSortHome(request, response);
-            }
-            if (action != null && action.equals("searchByName")) {
-                url = processSearchByName(request, response);
-            }
+
 
         } catch (Exception e) {
             log("Error at MainController: " + e.toString());
