@@ -47,8 +47,10 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
 
     @Override
     public boolean create(REntityDTO entity) {
-        String sql = "INSERT INTO [ReservedEntities] ([EntityID], [RestaurantID], [Type], [ReservationFee], [ActiveTill], [SeatCap], [ForwardLim], [Daily],[Weekly])"
-                + " VALUES (?, ?, ?, ?, ?, ? ,? ,?, ? )";
+        String sql = "INSERT INTO [ReservedEntities] "
+                + "([EntityID], [RestaurantID], [Type], [ReservationFee], [ActiveTill], "
+                + "[SeatCap], [ForwardLim], [Daily],[Weekly],[Name])"
+                + " VALUES (?, ?, ?, ?, ?, ? ,? ,?, ?, ? )";
 
         try {
             Connection conn = DBUtils.getConnection();
@@ -95,7 +97,8 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
                         rs.getInt("SeatCap"),
                         rs.getInt("ForwardLim"),
                         rs.getInt("Daily"),
-                        rs.getInt("Weekly")
+                        rs.getInt("Weekly"),
+                        rs.getString("Name")
                 );
             }
         } catch (ClassNotFoundException | SQLException ex) {
@@ -149,7 +152,8 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
                         rs.getInt("SeatCap"),
                         rs.getInt("ForwardLim"),
                         rs.getInt("Daily"),
-                        rs.getInt("Weekly")
+                        rs.getInt("Weekly"),
+                        rs.getString("Name")
                 );
             }
         } catch (ClassNotFoundException | SQLException ex) {
@@ -175,7 +179,9 @@ public class REntityDAO implements IDAO<REntityDTO, Integer> {
                         rs.getInt("SeatCap"),
                         rs.getInt("ForwardLim"),
                         rs.getInt("Daily"),
-                        rs.getInt("Weekly"));
+                        rs.getInt("Weekly"),
+                        rs.getString("Name")
+                );
                 lrest.add(rent);
             }
         } catch (ClassNotFoundException | SQLException ex) {

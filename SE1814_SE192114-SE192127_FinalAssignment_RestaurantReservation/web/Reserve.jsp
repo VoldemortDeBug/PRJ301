@@ -38,10 +38,6 @@
                 if (request.getAttribute("ap") != null) {
                     ap = (int) request.getAttribute("ap");
                 }
-                boolean owner = false;
-                if (request.getAttribute("owner") != null) {
-                    owner = true;
-                }
         %>
 
         <h1>Available time for reservation: </h1>
@@ -61,22 +57,21 @@
             %>
             <tr>
                 <td><%= idate%></td>
-                <% for (int j = 0; j < 24; j++) {
-                        if (idate.after(rent.getActiveTill()) || !Utils.hasbit(rent.getWeekly(), Utils.toWeekDay(idate)) || !Utils.hasbit(rent.getDaily(), Utils.PO2[j])) {
-                %>
-                <td><div style="background-color: beige; width: 30px; height: 30px">-</div></td>
-                <% } else {
-                    int rsvID = Utils.reservationAtTime(lresv, j, idate);
-                    if (rsvID == -1) {%>
-                <td><div style="background-color: <%= (Utils.xdaysFromNow(0).equals(idate)) ? "beige" : "#66ff66"%>; width: 30px; height: 30px"></div></td>
-                    <% } else {%>
+                <% for (int j = 0; j < 24; j++) {%>
                 <td>
-                    <%if (owner) {%><a href="UserController?action=checkReservation&restID=<%= rest.getResID()%>&entID=<%= rent.getEnID()%>&rsvID=<%= rsvID%>"><%}%>
-                        <div style="background-color: #ff9999; width: 30px; height: 30px"></div>
-                        <%if (owner) {%></a><%}%>
+                    <%if (idate.after(rent.getActiveTill()) || !Utils.hasbit(rent.getWeekly(), Utils.toWeekDay(idate)) || !Utils.hasbit(rent.getDaily(), Utils.PO2[j])) {%>
+                        <div style="background-color: beige; width: 30px; height: 30px">-</div>
+                        <% } else {
+                            int rsvID = Utils.reservationAtTime(lresv, j, idate);
+                            if (rsvID == -1) {%>
+                                <div style="background-color: <%= (Utils.xdaysFromNow(0).equals(idate)) ? "beige" : "#66ff66"%>; width: 30px; height: 30px"></div>
+                            <% } else {%>
+                                <%if (user.getType().equals("Owner") && user.getUserID()==rest.getOwnerID()) {%><a href="UserController?action=checkReservation&restID=<%= rest.getResID()%>&entID=<%= rent.getEnID()%>&rsvID=<%= rsvID%>"><%}%>
+                                <div style="background-color: #ff9999; width: 30px; height: 30px"></div>
+                                <%if (user.getType().equals("Owner") && user.getUserID()==rest.getOwnerID()) {%></a><%}%>
+                            <% } %>
+                        <% } %>
                 </td>
-                <% } %>
-                <% } %>
                 <% } %>
             </tr>
 
@@ -103,12 +98,11 @@
 
         <br/><br/>
 
-        <% if (!owner){ %>
+        <% if (!user.getType().equals("Owner")) { %>
 
         <h1>Making reservation:</h1>
         <%
-                int 
-            rSeat = 1;
+            int rSeat = 1;
             if (request.getAttribute("rSeat") != null) {
                 rSeat = (int) request.getAttribute("rSeat");
             }

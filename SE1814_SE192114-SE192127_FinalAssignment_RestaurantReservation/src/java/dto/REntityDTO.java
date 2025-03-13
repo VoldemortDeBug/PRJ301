@@ -22,11 +22,12 @@ public class REntityDTO {
     private int forwardLim;  //maximum days to the future that can make a reservation
     private int daily; //max = 16777215
     private int weekly; //max = 127
+    private String name;
 
     public REntityDTO() {
     }
 
-    public REntityDTO(int enID, int restID, String enType, int enFee, Date activeTill, int seatCap, int forwardLim, int daily, int weekly) {
+    public REntityDTO(int enID, int restID, String enType, int enFee, Date activeTill, int seatCap, int forwardLim, int daily, int weekly, String name) {
         this.enID = enID;
         this.restID = restID;
         this.enType = enType;
@@ -36,7 +37,18 @@ public class REntityDTO {
         this.forwardLim = forwardLim;
         this.daily = daily;
         this.weekly = weekly;
+        this.name = name;
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    
 
     public void setForwardLim(int forwardLim) {
         this.forwardLim = forwardLim;
@@ -112,7 +124,7 @@ public class REntityDTO {
 
     @Override
     public String toString() {
-        return "REntityDTO{" + "enID=" + enID + ", restID=" + restID + ", enType=" + enType + ", enFee=" + enFee + ", activeTill=" + activeTill + ", seatCap=" + seatCap + ", forwardLim=" + forwardLim + ", daily=" + daily + ", weekly=" + weekly + '}';
+        return "REntityDTO{" + "enID=" + enID + ", restID=" + restID + ", enType=" + enType + ", enFee=" + enFee + ", activeTill=" + activeTill + ", seatCap=" + seatCap + ", forwardLim=" + forwardLim + ", daily=" + daily + ", weekly=" + weekly + ", name=" + name + '}';
     }
 
 }

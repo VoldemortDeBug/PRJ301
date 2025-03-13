@@ -130,6 +130,10 @@
         <%if (request.getAttribute("lent") != null) {
                 List<REntityDTO> lent = (List<REntityDTO>) request.getAttribute("lent");%>
         <h1>List of tables/rooms</h1>
+        
+        <% if (request.getAttribute("updateMSG")!=null){ %>
+        <span style="color: green"><%= request.getAttribute("updateMSG")+""  %></span><br/>
+        <%}%>
 
         <%
             for (REntityDTO i : lent) {
@@ -168,6 +172,7 @@
 
 
         <%if (user.getType().equals("Owner")) {%>
+        
         <h1>Add new table/room</h1>
 
         <%
@@ -194,6 +199,10 @@
             if (request.getAttribute("eActiveTill") != null) {
                 eActiveTill = (Date) request.getAttribute("eActiveTill");
             }
+            String eName = "";
+            if (request.getAttribute("eName") != null) {
+                eName = (String) request.getAttribute("eName");
+            }
 
 
         %>
@@ -201,6 +210,7 @@
         <form method="post" action="UserController" >
             <input type="hidden" name="action" value="createEntity"/>
             <input type="hidden" name="restID" value="<%= rest.getResID()%>"/>
+            Name: <input type="text" name="eName"  required value="<%= eName%>"/><br/>
             Reservation Fee: <input type="number" name="eFee"  required value="<%= eFee%>"/><br/>
             Type: 
             <select id="options" name="eType">

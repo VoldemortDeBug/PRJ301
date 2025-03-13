@@ -222,12 +222,12 @@ public class RestDAO implements IDAO<RestDTO, Integer> {
 
     public List<RestDTO> searchByName(String s) {
         String sql = "SELECT r.* FROM [Restaurants]  r  "
-                + "JOIN ReservedEntities re "
-                + "ON r.RestaurantID = re.RestaurantID "
-                + "WHERE NAME LIKE ?  "
-                + "AND re.ActiveTill > GETDATE()"
-                + "GROUP BY r.RestaurantID, r.Name, r.Location, r.OwnerID, r.MainPhoto, r.TotalProfit "
-                + "HAVING COUNT(re.EntityID) > 0";
+                + " JOIN ReservedEntities re "
+                + " ON r.RestaurantID = re.RestaurantID "
+                + " WHERE r.Name LIKE ?  "
+                + " AND re.ActiveTill > GETDATE() "
+                + " GROUP BY r.RestaurantID, r.Name, r.Location, r.OwnerID, r.MainPhoto, r.TotalProfit "
+                + " HAVING COUNT(re.EntityID) > 0 ";
         List<RestDTO> lrest = new ArrayList<>();
         try {
             Connection conn = DBUtils.getConnection();
