@@ -549,6 +549,10 @@ public class UserController extends HttpServlet {
         int entID = Integer.parseInt(request.getParameter("entID"));
         if (!AuthenUtils.isOwnerOfEntity(request.getSession(), entID)) {
             System.out.println("is not owner");
+            RestDTO rest = rdao.restOwnedBy(restID, user.getUserID()); // get direct restaurant to ensure it's valid restaurant from valid user, prevent hacking.
+            REntityDTO rent = edao.GetResvEntity(rest.getResID(), entID);
+            System.out.println(user+"\n"+rest+"\n"+rent);
+
             return;
         }
         Date newEdate = null;

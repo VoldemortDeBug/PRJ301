@@ -66,7 +66,6 @@ public class AuthenUtils {
             return false;
         }
         UserDTO user = (UserDTO) session.getAttribute("user");
-        user = udao.searchByID(user.getUserID());
         RestDTO rest = rdao.searchByID(restID);
         return rest.getOwnerID() == user.getUserID();
     }
@@ -76,9 +75,10 @@ public class AuthenUtils {
             return false;
         }
         UserDTO user = (UserDTO) session.getAttribute("user");
-        user = udao.searchByID(user.getUserID());
         REntityDTO rent = edao.searchByID(entID);
         RestDTO rest = rdao.searchByID(rent.getRestID());
+        System.out.println(user + "\n" + rest + "\n" + rent);
+        System.out.println("and compare"+user.getUserID()+rest.getOwnerID());
         return rest.getOwnerID() == user.getUserID();
     }
 
@@ -88,21 +88,21 @@ public class AuthenUtils {
         }
         UserDTO user = (UserDTO) session.getAttribute("user");
         ReservationDTO resv = rsvdao.searchByID(rsvID);
-        if(resv.getUserID()==user.getUserID()){
+        if (resv.getUserID() == user.getUserID()) {
             return true;
         }
         REntityDTO rent = edao.searchByID(resv.getEntID());
         RestDTO rest = rdao.searchByID(rent.getRestID());
         return rest.getOwnerID() == user.getUserID();
     }
-    
+
     public static boolean reservationOwner(HttpSession session, int rsvID) {
         if (session.getAttribute("user") == null) {
             return false;
         }
         UserDTO user = (UserDTO) session.getAttribute("user");
         ReservationDTO resv = rsvdao.searchByID(rsvID);
-        return (resv.getUserID()==user.getUserID());
+        return (resv.getUserID() == user.getUserID());
     }
 
 }
